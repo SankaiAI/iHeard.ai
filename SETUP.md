@@ -19,14 +19,35 @@ Then edit `.env` with your actual values:
 
 ```env
 # Get this from your Shopify Partner Dashboard > Apps > [Your App] > App setup
+# This is the same as your "Client ID" from the Shopify Partner Dashboard
 SHOPIFY_API_KEY=your_shopify_api_key_here
 
 # Generate a unique UUID for your widget (you can use: https://www.uuidgenerator.net/)
+# This identifies your specific widget instance and can be any unique UUID
 SHOPIFY_SALES_ASSISTANT_WIDGET_ID=your_widget_id_here
 
 # Optional: N8N webhook URL for AI processing
 N8N_WEBHOOK_URL=your_n8n_webhook_url_here
 ```
+
+#### 📝 How to Get These Values:
+
+**SHOPIFY_API_KEY**:
+1. Go to [Shopify Partner Dashboard](https://partners.shopify.com)
+2. Navigate to "Apps" → Select your app
+3. Go to "App setup" tab
+4. Copy the **Client ID** value (this is your API key)
+
+**SHOPIFY_SALES_ASSISTANT_WIDGET_ID**:
+1. Visit [UUID Generator](https://www.uuidgenerator.net/)
+2. Click "Generate" to create a new UUID v4
+3. Copy the generated UUID (e.g., `bc053588-7383-478e-b5d1-e95f343d267e`)
+4. This uniquely identifies your widget instance
+
+**N8N_WEBHOOK_URL** (Optional):
+1. Set up your N8N workflow (see `N8N_SETUP.md` for details)
+2. Copy the webhook URL from your N8N workflow
+3. Format: `https://your-n8n-instance.com/webhook/your-webhook-id`
 
 ### 2. Shopify App Configuration (`shopify.app.toml`)
 
@@ -75,8 +96,9 @@ redirect_urls = [
 ### 3. Get Your API Credentials
 
 1. After creating the app, go to "App setup"
-2. Copy the **Client ID** (this is your `SHOPIFY_API_KEY`)
+2. Copy the **Client ID** (this is your `SHOPIFY_API_KEY` for the `.env` file)
 3. Note down the **Client secret** (you may need this later)
+4. The Client ID is also used as `client_id` in your `shopify.app.toml` file
 
 ### 4. Create a Development Store
 

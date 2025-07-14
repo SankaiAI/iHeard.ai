@@ -46,6 +46,13 @@ An intelligent AI-powered sales assistant widget for Shopify stores that helps c
    cp .env.example .env
    # Edit .env with your Shopify app credentials
    ```
+   
+   **Required values for `.env`:**
+   - `SHOPIFY_API_KEY`: Get from Shopify Partner Dashboard > Apps > [Your App] > App setup (Client ID)
+   - `SHOPIFY_SALES_ASSISTANT_WIDGET_ID`: Generate a UUID at [uuidgenerator.net](https://www.uuidgenerator.net/)
+   - `N8N_WEBHOOK_URL`: Optional, for N8N integration
+   
+   See `SETUP.md` for detailed instructions on obtaining these values.
 
 4. **Configure Shopify app**
    ```bash
