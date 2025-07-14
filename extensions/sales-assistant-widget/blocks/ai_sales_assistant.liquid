@@ -1,0 +1,641 @@
+{% comment %}
+AI Sales Assistant Widget Block
+This creates a floating chat widget that can be added to any page
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "AI Sales Assistant",
+  "target": "body",
+  "stylesheet": "ai-sales-assistant.css",
+  "javascript": "ai-sales-assistant.js",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable AI Assistant",
+      "default": true
+    },
+    {
+      "type": "select",
+      "id": "position",
+      "label": "Position",
+      "options": [
+        {
+          "value": "bottom-right",
+          "label": "Bottom Right"
+        },
+        {
+          "value": "bottom-left", 
+          "label": "Bottom Left"
+        },
+        {
+          "value": "top-right",
+          "label": "Top Right"
+        },
+        {
+          "value": "top-left",
+          "label": "Top Left"
+        },
+        {
+          "value": "center-right",
+          "label": "Center Right"
+        },
+        {
+          "value": "center-left",
+          "label": "Center Left"
+        }
+      ],
+      "default": "bottom-right"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button Text",
+      "default": "Ask AI Assistant"
+    },
+    {
+      "type": "text",
+      "id": "chat_title",
+      "label": "Chat Title",
+      "default": "AI Sales Assistant"
+    },
+    {
+      "type": "textarea",
+      "id": "welcome_message",
+      "label": "Welcome Message",
+      "default": "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?"
+    },
+    {
+      "type": "text",
+      "id": "input_placeholder",
+      "label": "Input Placeholder",
+      "default": "Ask me anything about our products..."
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary Color",
+      "default": "#007cba"
+    }
+  ]
+}
+{% endschema %}
+
+<!-- AI Sales Assistant Widget will be dynamically loaded -->
+<div id="ai-sales-assistant-container"></div>
+
+<script>
+// AI Sales Assistant Widget JavaScript
+(function() {
+  let chatOpen = false;
+  let conversationHistory = [];
+  let widgetSettings = null;
+  
+  // Get settings from block settings or fetch from API
+  const blockSettings = {
+    enabled: {{ block.settings.enabled | json }},
+    position: {{ block.settings.position | json }},
+    buttonText: {{ block.settings.button_text | json }},
+    chatTitle: {{ block.settings.chat_title | json }},
+    welcomeMessage: {{ block.settings.welcome_message | json }},
+    inputPlaceholder: {{ block.settings.input_placeholder | json }},
+    primaryColor: {{ block.settings.primary_color | json }}
+  };
+  
+  // Toggle chat window
+  window.toggleAIChat = function() {
+    const chatWindow = document.getElementById('ai-chat-window');
+    chatOpen = !chatOpen;
+    chatWindow.style.display = chatOpen ? 'block' : 'none';
+    
+    if (chatOpen) {
+      document.getElementById('ai-chat-input-field').focus();
+    }
+  };
+  
+  // Handle enter key press
+  window.handleChatKeyPress = function(event) {
+    if (event.key === 'Enter') {
+      sendAIMessage();
+    }
+  };
+  
+  // Send message to AI
+  window.sendAIMessage = function() {
+    const inputField = document.getElementById('ai-chat-input-field');
+    const message = inputField.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessageToChat('user', message);
+    inputField.value = '';
+    
+    // Show loading
+    showLoading(true);
+    
+    // Send to AI service
+    const aiApiUrl = 'https://valley-attachments-express-ppm.trycloudflare.com';
+    fetch(`${aiApiUrl}/apps/sales-assistant-api`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: message,
+        context: {
+          page: window.location.pathname,
+          productId: getProductIdFromPage(),
+          conversationHistory: conversationHistory
+        }
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      showLoading(false);
+      
+      if (data.success) {
+        addMessageToChat('assistant', data.response);
+        
+        // Update conversation history
+        conversationHistory.push(
+          { role: 'user', content: message },
+          { role: 'assistant', content: data.response }
+        );
+        
+        // Keep only last 10 messages
+        if (conversationHistory.length > 10) {
+          conversationHistory = conversationHistory.slice(-10);
+        }
+      } else {
+        addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
+      }
+    })
+    .catch(error => {
+      showLoading(false);
+      console.error('AI Assistant Error:', error);
+      addMessageToChat('assistant', 'Sorry, I encountered an error. Please try again.');
+    });
+  };
+  
+  // Add message to chat
+  function addMessageToChat(sender, message) {
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ai-message ${sender}-message`;
+    
+    const messageContent = document.createElement('div');
+    messageContent.className = 'message-content';
+    messageContent.textContent = message;
+    
+    if (sender === 'user') {
+      messageContent.style.backgroundColor = widgetSettings.primaryColor;
+      messageContent.style.color = 'white';
+    } else {
+      messageContent.style.backgroundColor = '#f1f1f1';
+      messageContent.style.color = '#333';
+    }
+    
+    messageDiv.appendChild(messageContent);
+    messagesContainer.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
+  
+  // Show/hide loading indicator
+  function showLoading(show) {
+    const loadingDiv = document.getElementById('ai-loading');
+    if (loadingDiv) {
+      loadingDiv.style.display = show ? 'block' : 'none';
+    }
+  }
+  
+  // Get product ID from current page
+  function getProductIdFromPage() {
+    const productMatch = window.location.pathname.match(/\/products\/([^\/]+)/);
+    if (productMatch) {
+      return productMatch[1];
+    }
+    return null;
+  }
+  
+  // Load widget settings and initialize
+  async function initializeWidget() {
+    try {
+      // Use block settings or fetch from API as fallback
+      widgetSettings = blockSettings;
+      
+      // Try to fetch updated settings from API
+      const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
+      const appUrls = [
+        'https://valley-attachments-express-ppm.trycloudflare.com/api/widget-settings'
+      ];
+      
+      for (const appUrl of appUrls) {
+        try {
+          const timestamp = Date.now();
+          const response = await fetch(`${appUrl}?shop=${shopDomain}&t=${timestamp}`);
+          if (response.ok) {
+            const data = await response.json();
+            // Prioritize API settings over block settings
+            widgetSettings = { ...blockSettings, ...data.settings };
+            console.log(`AI Widget: Successfully fetched settings from ${appUrl}`, data.settings);
+            break;
+          }
+        } catch (e) {
+          console.log(`Failed to fetch from ${appUrl}:`, e);
+          continue;
+        }
+      }
+      
+      // Debug logging
+      console.log('AI Widget: Settings loaded:', widgetSettings);
+      
+      // Only create widget if enabled
+      if (!widgetSettings.enabled) {
+        console.log('AI Widget: Disabled, not creating widget');
+        return;
+      }
+      
+      // Create the widget HTML
+      createWidget();
+      
+    } catch (error) {
+      console.error('Failed to load AI Sales Assistant settings:', error);
+      // Use block settings as fallback
+      widgetSettings = blockSettings;
+      if (widgetSettings.enabled) {
+        createWidget();
+      }
+    }
+  }
+  
+  // Create the widget HTML
+  function createWidget() {
+    const container = document.getElementById('ai-sales-assistant-container');
+    if (!container || !widgetSettings) return;
+    
+    console.log('AI Widget: Creating widget with position:', widgetSettings.position);
+    
+    // Clear any existing widget
+    container.innerHTML = '';
+    
+    container.innerHTML = `
+      <div class="ai-sales-assistant-widget position-${widgetSettings.position}" data-widget-id="ai-sales-assistant">
+        <!-- Chat Toggle Button -->
+        <button 
+          class="ai-chat-toggle" 
+          onclick="toggleAIChat()"
+          style="background-color: ${widgetSettings.primaryColor};"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C10.3596 22 8.82344 21.6318 7.46622 20.9823L2.94264 21.9353C2.4292 22.0519 1.94812 21.5708 2.06474 21.0574L3.01767 16.5338C2.36821 15.1766 2 13.6404 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 13.4542 4.33819 14.8281 4.94219 16.0466L4.04695 19.953L7.95342 19.0578C9.17186 19.6618 10.5458 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" fill="white"/>
+          </svg>
+          <span class="button-text">${widgetSettings.buttonText}</span>
+        </button>
+        
+        <!-- Chat Window -->
+        <div id="ai-chat-window" class="ai-chat-window" style="display: none;">
+          <!-- Chat Header -->
+          <div class="ai-chat-header" style="background-color: ${widgetSettings.primaryColor};">
+            <h3>${widgetSettings.chatTitle}</h3>
+            <button class="ai-chat-close" onclick="toggleAIChat()">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Chat Messages -->
+          <div id="ai-chat-messages" class="ai-chat-messages">
+            <div class="ai-message assistant-message">
+              <div class="message-content" style="background-color: #f1f1f1; color: #333;">
+                ${widgetSettings.welcomeMessage}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Loading Indicator -->
+          <div id="ai-loading" class="ai-loading" style="display: none;">
+            <div class="loading-dots">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+          
+          <!-- Chat Input -->
+          <div class="ai-chat-input">
+            <input 
+              type="text" 
+              id="ai-chat-input-field"
+              placeholder="${widgetSettings.inputPlaceholder}"
+              onkeypress="handleChatKeyPress(event)"
+            />
+            <button onclick="sendAIMessage()" style="background-color: ${widgetSettings.primaryColor};">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    // Add CSS styles
+    addWidgetStyles();
+  }
+  
+  // Add CSS styles for the widget
+  function addWidgetStyles() {
+    if (document.getElementById('ai-widget-styles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'ai-widget-styles';
+    style.textContent = `
+/* AI Sales Assistant Widget Styles */
+.ai-sales-assistant-widget {
+  position: fixed;
+  z-index: 1000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Position variants */
+.ai-sales-assistant-widget.position-bottom-right {
+  bottom: 20px;
+  right: 20px;
+}
+
+.ai-sales-assistant-widget.position-bottom-left {
+  bottom: 20px;
+  left: 20px;
+}
+
+.ai-sales-assistant-widget.position-top-right {
+  top: 20px;
+  right: 20px;
+}
+
+.ai-sales-assistant-widget.position-top-left {
+  top: 20px;
+  left: 20px;
+}
+
+.ai-sales-assistant-widget.position-center-right {
+  top: 50%;
+  right: 20px;
+  transform: translateY(-50%);
+}
+
+.ai-sales-assistant-widget.position-center-left {
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+}
+
+.ai-chat-toggle {
+  background: #007cba;
+  border: none;
+  border-radius: 50px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.ai-chat-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.ai-chat-toggle .button-text {
+  white-space: nowrap;
+}
+
+.ai-chat-window {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 350px;
+  height: 500px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
+.ai-sales-assistant-widget.position-top-left .ai-chat-window,
+.ai-sales-assistant-widget.position-center-left .ai-chat-window {
+  right: auto;
+  left: 0;
+}
+
+.ai-sales-assistant-widget.position-top-right .ai-chat-window,
+.ai-sales-assistant-widget.position-top-left .ai-chat-window {
+  bottom: auto;
+  top: 70px;
+}
+
+.ai-sales-assistant-widget.position-center-right .ai-chat-window,
+.ai-sales-assistant-widget.position-center-left .ai-chat-window {
+  bottom: auto;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ai-chat-header {
+  background: #007cba;
+  color: white;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ai-chat-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.ai-chat-close {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-chat-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+.ai-chat-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.ai-chat-messages {
+  flex: 1;
+  padding: 15px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-message {
+  max-width: 85%;
+}
+
+.ai-message.user-message {
+  align-self: flex-end;
+}
+
+.ai-message.assistant-message {
+  align-self: flex-start;
+}
+
+.message-content {
+  padding: 10px 14px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.ai-loading {
+  padding: 10px 15px;
+  text-align: center;
+}
+
+.loading-dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.loading-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #007cba;
+  animation: loading-bounce 1.4s ease-in-out infinite both;
+}
+
+.loading-dots span:nth-child(1) { animation-delay: -0.32s; }
+.loading-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes loading-bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.ai-chat-input {
+  padding: 15px;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  gap: 10px;
+}
+
+.ai-chat-input input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  font-size: 14px;
+  outline: none;
+}
+
+.ai-chat-input input:focus {
+  border-color: #007cba;
+}
+
+.ai-chat-input button {
+  background: #007cba;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.ai-chat-input button:hover {
+  background: #005a8c;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .ai-chat-window {
+    width: calc(100vw - 40px);
+    height: calc(100vh - 140px);
+    position: fixed;
+    bottom: 70px;
+    left: 20px;
+    right: 20px;
+  }
+  
+  .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
+  .ai-sales-assistant-widget.position-top-left .ai-chat-window,
+  .ai-sales-assistant-widget.position-center-left .ai-chat-window,
+  .ai-sales-assistant-widget.position-bottom-right .ai-chat-window,
+  .ai-sales-assistant-widget.position-top-right .ai-chat-window,
+  .ai-sales-assistant-widget.position-center-right .ai-chat-window {
+    left: 20px;
+    right: 20px;
+    transform: none;
+  }
+  
+  .ai-chat-toggle .button-text {
+    display: none;
+  }
+}
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeWidget);
+  } else {
+    initializeWidget();
+  }
+  
+  // Check for setting updates every 5 seconds
+  let lastSettingsUpdate = null;
+  setInterval(async () => {
+    try {
+      const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
+      const response = await fetch(`https://valley-attachments-express-ppm.trycloudflare.com/api/widget-settings?shop=${shopDomain}&t=${Date.now()}`);
+      if (response.ok) {
+        const data = await response.json();
+        const currentUpdate = data.settings.updatedAt;
+        
+        if (lastSettingsUpdate && currentUpdate !== lastSettingsUpdate) {
+          console.log('AI Widget: Settings updated, refreshing widget...');
+          widgetSettings = { ...blockSettings, ...data.settings };
+          createWidget();
+        }
+        lastSettingsUpdate = currentUpdate;
+      }
+    } catch (e) {
+      // Silently fail
+    }
+  }, 5000);
+})();
+</script> 

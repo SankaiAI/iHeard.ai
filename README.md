@@ -1,0 +1,230 @@
+# 🤖 iHear.ai - AI Sales Assistant for Shopify
+
+An intelligent AI-powered sales assistant widget for Shopify stores that helps customers find products, answer questions, and provide personalized recommendations.
+
+## 📋 Features
+
+- **🎯 Smart Product Recommendations** - AI-powered product suggestions based on customer queries
+- **💬 Real-time Chat Interface** - Floating chat widget with customizable positioning
+- **🎨 Fully Customizable** - Admin panel to configure colors, text, position, and behavior
+- **📱 Mobile Responsive** - Optimized for all device sizes
+- **🔌 N8N Integration** - Optional integration with N8N workflows for advanced AI processing
+- **⚡ Real-time Updates** - Settings changes reflect immediately on the storefront
+- **🛡️ Secure** - Built with Shopify's security best practices
+
+## 🏗️ Architecture
+
+- **Frontend**: Remix with TypeScript and Shopify Polaris UI
+- **Backend**: Node.js with Prisma ORM and SQLite database
+- **Theme Extension**: Liquid template with vanilla JavaScript
+- **AI Integration**: N8N webhooks with fallback processing
+- **Authentication**: Shopify OAuth with session management
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Shopify Partner account
+- Shopify CLI 3.0+
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/ihear-ai.git
+   cd ihear-ai
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Shopify app credentials
+   ```
+
+4. **Configure Shopify app**
+   ```bash
+   cp shopify.app.example.toml shopify.app.toml
+   # Edit shopify.app.toml with your app details
+   ```
+
+5. **Set up the database**
+   ```bash
+   npx prisma generate
+   npx prisma migrate dev
+   ```
+
+6. **Start development server**
+   ```bash
+   shopify app dev
+   ```
+
+## ⚙️ Configuration
+
+### Environment Variables
+
+Create a `.env` file with the following variables:
+
+```env
+SHOPIFY_API_KEY=your_shopify_api_key_here
+SHOPIFY_SALES_ASSISTANT_WIDGET_ID=your_widget_id_here
+```
+
+### Shopify App Configuration
+
+Update `shopify.app.toml` with your app details:
+
+```toml
+client_id = "your_shopify_app_client_id"
+name = "ihear.ai"
+application_url = "https://your-tunnel-url.trycloudflare.com"
+```
+
+## 📁 Project Structure
+
+```
+ihear-ai/
+├── app/                          # Remix application
+│   ├── routes/                   # App routes
+│   │   ├── app.settings.tsx      # Admin settings page
+│   │   ├── api.widget-settings.tsx # Widget settings API
+│   │   └── apps.sales-assistant-api.tsx # AI chat API
+│   ├── db.server.ts              # Database connection
+│   └── shopify.server.ts         # Shopify authentication
+├── extensions/                   # Shopify theme extensions
+│   └── sales-assistant-widget/   # AI widget extension
+│       ├── blocks/               # Theme blocks
+│       │   └── ai_sales_assistant.liquid # Main widget
+│       ├── assets/               # Static assets
+│       ├── locales/              # Translations
+│       └── snippets/             # Reusable snippets
+├── prisma/                       # Database schema and migrations
+│   ├── schema.prisma             # Database schema
+│   └── migrations/               # Database migrations
+└── services/                     # External services
+    └── n8n.service.ts            # N8N integration
+```
+
+## 🎛️ Admin Panel Features
+
+### Widget Configuration
+- **Enable/Disable** - Toggle widget on/off across the store
+- **Position Settings** - 6 positioning options (corners and center sides)
+- **Customization** - Button text, chat title, welcome message, placeholder text
+- **Color Picker** - Fully functional color customization
+- **Live Preview** - See changes in real-time
+
+### Settings Auto-Sync
+- Changes in admin panel update the storefront within 5 seconds
+- Database persistence ensures settings survive server restarts
+- Fallback to default settings if API is unavailable
+
+## 🔧 Development
+
+### Database Management
+
+```bash
+# Generate Prisma client
+npx prisma generate
+
+# Create and apply migrations
+npx prisma migrate dev --name description
+
+# Reset database (development only)
+npx prisma migrate reset
+
+# View database in browser
+npx prisma studio
+```
+
+### Theme Extension Development
+
+The widget is built as a Shopify theme extension block that can be added to any theme template. It automatically:
+
+- Fetches configuration from the admin panel
+- Applies custom styling and positioning
+- Handles real-time chat interactions
+- Integrates with the AI backend
+
+### API Endpoints
+
+- `GET /api/widget-settings` - Fetch widget configuration
+- `POST /apps/sales-assistant-api` - Process AI chat messages
+
+## 🤖 AI Integration
+
+### N8N Workflow (Optional)
+
+The app supports integration with N8N for advanced AI processing:
+
+1. Set up an N8N instance
+2. Create a webhook workflow for processing chat messages
+3. Configure the webhook URL in your environment
+
+### Fallback Processing
+
+If N8N is unavailable, the app provides basic fallback responses to ensure the chat always works.
+
+## 🚀 Deployment
+
+### Development Deployment
+
+The app runs in development mode with Shopify CLI:
+
+```bash
+shopify app dev
+```
+
+### Production Deployment
+
+For production deployment, you'll need to:
+
+1. Set up a production server (Railway, Heroku, etc.)
+2. Configure production environment variables
+3. Set up a production database
+4. Deploy using Shopify CLI
+
+```bash
+shopify app deploy
+```
+
+## 🔒 Security Considerations
+
+- **API Keys**: Never commit `.env` or `shopify.app.toml` files
+- **Database**: SQLite is suitable for development; use PostgreSQL for production
+- **CORS**: Widget API includes proper CORS headers for cross-origin requests
+- **Authentication**: All admin routes require Shopify OAuth authentication
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Documentation**: [Shopify App Development](https://shopify.dev/docs/apps)
+- **Issues**: Open an issue on GitHub
+- **Discussions**: Use GitHub Discussions for questions and ideas
+
+## 🙏 Acknowledgments
+
+- Built with [Shopify CLI](https://shopify.dev/docs/apps/tools/cli)
+- UI components from [Shopify Polaris](https://polaris.shopify.com/)
+- Database ORM by [Prisma](https://www.prisma.io/)
+- Web framework by [Remix](https://remix.run/)
+
+---
+
+**Made with ❤️ for the Shopify ecosystem**
