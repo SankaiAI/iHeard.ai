@@ -164,21 +164,103 @@ Here's a basic workflow structure:
 
 ### 5. Environment Variables
 
-Set these environment variables in your Shopify app:
+Add these variables to your `.env` file in the Shopify app root directory:
 
-```bash
+```env
+# N8N Integration
 N8N_WEBHOOK_URL=https://your-n8n-instance.com/webhook/sales-assistant
 N8N_API_KEY=your_n8n_api_key_if_needed
+
+# If using OpenAI in your N8N workflow
 OPENAI_API_KEY=your_openai_api_key_if_using_openai
 ```
 
+**How to get these values:**
+
+**N8N_WEBHOOK_URL:**
+1. In your N8N workflow, click on the Webhook trigger node
+2. Copy the "Production URL" or "Test URL"
+3. Example: `https://your-n8n-instance.com/webhook/abc123def456`
+
+**N8N_API_KEY (Optional):**
+- Only needed if your N8N instance requires authentication
+- Set this in your N8N instance settings under API Keys
+
+**OPENAI_API_KEY (If using OpenAI):**
+1. Go to [OpenAI API Keys](https://platform.openai.com/api-keys)
+2. Create a new API key
+3. Copy the key (starts with `sk-`)
+
 ### 6. Testing the Integration
 
-1. Start your N8N workflow
-2. Run your Shopify app: `npm run dev`
-3. Navigate to the AI Sales Assistant page
-4. Send a test message like "I need a red dress"
-5. Check N8N execution logs for debugging
+1. **Start your N8N workflow**
+   - Activate the workflow in N8N interface
+   - Ensure the webhook trigger is active
+
+2. **Update your `.env` file**
+   - Set `N8N_WEBHOOK_URL` to your actual webhook URL
+   - Save the file
+
+3. **Restart your Shopify app**
+   ```bash
+   # Stop the current development server (Ctrl+C or 'q')
+   npm run dev
+   ```
+
+4. **Test the integration**
+   - Navigate to the AI Sales Assistant page in your app
+   - Send a test message like "I need a red dress for a wedding"
+   - Check N8N logs to see if the webhook was triggered
+
+5. **Verify the response**
+   - The app should receive AI-powered responses from N8N
+   - If N8N fails, it will automatically fall back to local processing
+## Troubleshooting
+
+### Common Issues
+
+**1. "N8N Service Error" in console logs**
+- Check if your N8N instance is running
+- Verify the webhook URL is correct
+- Test the webhook manually with a tool like Postman
+
+**2. App falls back to local processing**
+- This is normal behavior when N8N is unavailable
+- Check your `.env` file has the correct `N8N_WEBHOOK_URL`
+- Restart the Shopify development server after updating `.env`
+
+**3. N8N webhook not receiving requests**
+- Ensure the workflow is activated in N8N
+- Check if the webhook trigger node is properly configured
+- Verify network connectivity between Shopify app and N8N
+
+**4. AI responses are generic**
+- Check if your N8N workflow includes AI processing nodes
+- Verify OpenAI API key is set (if using OpenAI)
+- Review N8N execution logs for errors
+
+### Testing N8N Connection
+
+You can test the N8N connection manually:
+
+```bash
+curl -X POST https://your-n8n-instance.com/webhook/abc123def456 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userMessage": "test message",
+    "products": [],
+    "context": {}
+  }'
+```
+
+Expected response:
+```json
+{
+  "message": "AI response here",
+  "recommendations": [],
+  "confidence": 0.8
+}
+```
 
 ### 7. Advanced Features
 

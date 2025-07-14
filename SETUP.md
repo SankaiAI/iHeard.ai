@@ -45,9 +45,16 @@ N8N_WEBHOOK_URL=your_n8n_webhook_url_here
 4. This uniquely identifies your widget instance
 
 **N8N_WEBHOOK_URL** (Optional):
-1. Set up your N8N workflow (see `N8N_SETUP.md` for details)
-2. Copy the webhook URL from your N8N workflow
-3. Format: `https://your-n8n-instance.com/webhook/your-webhook-id`
+1. **Install N8N**: Use Docker, npm, or N8N Cloud (see `N8N_SETUP.md` for details)
+2. **Create workflow**: Import the sales assistant workflow template
+3. **Get webhook URL**: Copy from the Webhook trigger node in your workflow
+4. **Format**: `https://your-n8n-instance.com/webhook/abc123def456`
+5. **Test**: Send a test request to verify the webhook works
+
+**N8N_API_KEY** (Optional):
+- Only required if your N8N instance has authentication enabled
+- Generate in N8N Settings → API Keys
+- Leave blank if using N8N without authentication
 
 ### 2. Shopify App Configuration (`shopify.app.toml`)
 
