@@ -29,10 +29,10 @@ const DEFAULT_SETTINGS = {
   chatTitle: "AI Sales Assistant",
   welcomeMessage: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
   inputPlaceholder: "Ask me anything about our products...",
-  primaryColor: "#007cba",
+  primaryColor: "#e620e6",
 };
 
-type SettingsType = typeof DEFAULT_SETTINGS;
+type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string };
 
 // Color conversion utility functions
 function hexToHsb(hex: string) {
@@ -40,9 +40,9 @@ function hexToHsb(hex: string) {
   const cleanHex = hex.replace('#', '');
   
   // Convert hex to RGB
-  const r = parseInt(cleanHex.substr(0, 2), 16) / 255;
-  const g = parseInt(cleanHex.substr(2, 2), 16) / 255;
-  const b = parseInt(cleanHex.substr(4, 2), 16) / 255;
+  const r = parseInt(cleanHex.substring(0, 2), 16) / 255;
+  const g = parseInt(cleanHex.substring(2, 4), 16) / 255;
+  const b = parseInt(cleanHex.substring(4, 6), 16) / 255;
   
   // Convert RGB to HSB
   const max = Math.max(r, g, b);
@@ -66,9 +66,9 @@ function hexToHsb(hex: string) {
   const brightness = max;
   
   return {
-    hue: hue,
-    saturation: saturation,
-    brightness: brightness
+    hue: isNaN(hue) ? 0 : hue,
+    saturation: isNaN(saturation) ? 0 : saturation,
+    brightness: isNaN(brightness) ? 0 : brightness
   };
 }
 
@@ -295,23 +295,21 @@ export default function SettingsPage() {
                   autoComplete="off"
                 />
 
-                <div>
+                <BlockStack gap="200">
                   <Text variant="bodyMd" as="p">
                     Primary Color
                   </Text>
-                  <div style={{ marginTop: "8px" }}>
-                    <ColorPicker
-                      color={hexToHsb(settings.primaryColor)}
-                      onChange={(color) => {
-                        const hex = hsbToHex(color);
-                        setSettings((prev: SettingsType) => ({ ...prev, primaryColor: hex }));
-                      }}
-                    />
-                  </div>
+                  <ColorPicker
+                    color={hexToHsb(settings.primaryColor)}
+                    onChange={(color) => {
+                      const hex = hsbToHex(color);
+                      setSettings((prev) => ({ ...prev, primaryColor: hex }));
+                    }}
+                  />
                   <Text variant="bodySm" as="p" tone="subdued">
                     Current color: {settings.primaryColor}
                   </Text>
-                </div>
+                </BlockStack>
               </FormLayout>
             </BlockStack>
           </Card>

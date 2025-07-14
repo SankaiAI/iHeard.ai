@@ -153,6 +153,22 @@ npx prisma migrate reset
 npx prisma studio
 ```
 
+### Local Development Workflow
+
+⚠️ **Important for Local Development**: Every time you restart `shopify app dev`, you must update the **App Proxy URL** in your Shopify Partner Dashboard because the tunnel URL changes.
+
+**Quick Steps:**
+1. Check your new tunnel URL in `shopify.app.toml` → `application_url`
+2. Update the proxy URL in Partner Dashboard → Apps → [Your App] → App setup → App proxy
+3. Set proxy URL to: `https://NEW-TUNNEL-URL.trycloudflare.com/api/widget-settings`
+
+**Why this matters:**
+- The widget needs to fetch settings from your app's API
+- Tunnel URLs change on each restart for security
+- Without updating the proxy URL, you'll get "Failed to fetch" errors
+
+See `SETUP.md` for detailed instructions on app proxy configuration.
+
 ### Theme Extension Development
 
 The widget is built as a Shopify theme extension block that can be added to any theme template. It automatically:

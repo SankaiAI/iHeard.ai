@@ -144,6 +144,81 @@ After setting up the configuration files:
    - Select your development store
    - The CLI will automatically update `shopify.app.toml` with the tunnel URL
 
+## 📡 App Proxy URL Management (Important for Local Development)
+
+### Understanding Tunnel URLs vs Proxy URLs
+
+When developing locally, Shopify CLI creates a **tunnel URL** that exposes your local server to the internet. This tunnel URL changes **every time you restart** `shopify app dev`.
+
+- **Tunnel URL**: Base URL (e.g., `https://everything-savannah-risk-vitamin.trycloudflare.com`)
+- **Proxy URL**: Full endpoint URL (e.g., `https://everything-savannah-risk-vitamin.trycloudflare.com/api/widget-settings`)
+
+### Finding Your Current Tunnel URL
+
+The current tunnel URL is automatically updated in `shopify.app.toml` when you run `shopify app dev`:
+
+```toml
+# shopify.app.toml
+application_url = "https://your-current-tunnel-url.trycloudflare.com"
+```
+
+### Setting Up App Proxy in Shopify Partner Dashboard
+
+The AI Sales Assistant widget needs to fetch settings from your app's API. This requires configuring an **App Proxy** in your Shopify Partner Dashboard.
+
+#### Initial Setup:
+
+1. **Go to Shopify Partner Dashboard**
+   - Navigate to Apps → [Your App] → App setup
+
+2. **Scroll to "App proxy" section**
+   - Click "Set up app proxy"
+
+3. **Configure the proxy settings**:
+   - **Subpath prefix**: `apps`
+   - **Subpath**: `ihear-ai` (or your preferred name)
+   - **Proxy URL**: `https://your-tunnel-url.trycloudflare.com/api/widget-settings`
+
+4. **Save the configuration**
+
+#### Important: Update Proxy URL After Each Restart
+
+⚠️ **CRITICAL WORKFLOW STEP**: Every time you restart `shopify app dev`, you must update the proxy URL in the Shopify Partner Dashboard because the tunnel URL changes.
+
+**Steps to update after each restart:**
+
+1. **Find your new tunnel URL**:
+   - Check the `application_url` in `shopify.app.toml`
+   - Or look for it in the terminal output when running `shopify app dev`
+
+2. **Update the Proxy URL**:
+   - Go to Partner Dashboard → Apps → [Your App] → App setup
+   - Find the "App proxy" section
+   - Update the **Proxy URL** to: `https://NEW-TUNNEL-URL.trycloudflare.com/api/widget-settings`
+   - Save the changes
+
+3. **Verify the update**:
+   - Test the widget settings in your admin panel
+   - The settings should save without "Failed to fetch" errors
+
+### Why This Happens
+
+- **Settings Storage**: Widget settings are stored in the database using the shop domain, so they persist across restarts
+- **API Access**: The widget frontend needs to access the API endpoint through the app proxy
+- **Tunnel URL Changes**: Shopify CLI generates a new tunnel URL each time for security
+- **Manual Update Required**: The Partner Dashboard doesn't automatically update the proxy URL
+
+### Production Deployment
+
+In production, you'll have a **permanent domain**, eliminating the need for tunnel URL updates:
+
+```toml
+# Production shopify.app.toml
+application_url = "https://your-app-domain.com"
+```
+
+The proxy URL becomes: `https://your-app-domain.com/api/widget-settings`
+
 ## 🎨 Installing the Widget
 
 After the app is running:
@@ -170,6 +245,26 @@ After the app is running:
 4. **Widget not appearing on storefront**
    - Check if the app embed is enabled in theme customizer
    - Verify the widget is enabled in admin settings
+
+5. **"Failed to fetch" errors when saving widget settings**
+   - ⚠️ **Most common local development issue**
+   - Check if you've updated the app proxy URL in Partner Dashboard
+   - Verify the proxy URL matches your current tunnel URL from `shopify.app.toml`
+   - Restart `shopify app dev` and update the proxy URL again
+
+6. **Widget settings not loading on storefront**
+   - Check browser developer console for CORS errors
+   - Verify the app proxy is properly configured
+   - Test the API endpoint directly: `https://your-tunnel-url.trycloudflare.com/api/widget-settings`
+
+### Development Workflow Checklist
+
+Every time you restart `shopify app dev`:
+
+- [ ] Note the new tunnel URL from `shopify.app.toml`
+- [ ] Update the app proxy URL in Shopify Partner Dashboard
+- [ ] Test widget settings save functionality
+- [ ] Verify widget loads properly on storefront
 
 ### Getting Help
 

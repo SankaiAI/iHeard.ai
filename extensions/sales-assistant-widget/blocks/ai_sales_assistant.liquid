@@ -76,7 +76,7 @@ This creates a floating chat widget that can be added to any page
       "type": "color",
       "id": "primary_color",
       "label": "Primary Color",
-      "default": "#007cba"
+      "default": "#ee5cee"
     }
   ]
 }
@@ -244,7 +244,17 @@ This creates a floating chat widget that can be added to any page
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
-    messageContent.textContent = message;
+    
+    // Don't truncate messages - let them wrap properly instead
+    messageContent.innerHTML = message.replace(/\n/g, '<br>'); // Handle line breaks properly
+    
+    // Apply proper styling for text wrapping
+    messageContent.style.wordWrap = 'break-word';
+    messageContent.style.wordBreak = 'break-word';
+    messageContent.style.overflowWrap = 'break-word';
+    messageContent.style.whiteSpace = 'pre-wrap';
+    messageContent.style.maxWidth = '100%';
+    messageContent.style.boxSizing = 'border-box';
     
     if (sender === 'user') {
       messageContent.style.backgroundColor = widgetSettings.primaryColor;
@@ -297,11 +307,11 @@ This creates a floating chat widget that can be added to any page
       
       productContent.innerHTML = `
         <div style="font-weight: 600; margin-bottom: 8px; color: #495057;">${product.title}</div>
-        <div style="font-size: 18px; font-weight: 700; color: #007cba; margin-bottom: 8px;">$${product.price}</div>
+                    <div style="font-size: 18px; font-weight: 700; color: ${widgetSettings.primaryColor}; margin-bottom: 8px;">$${product.price}</div>
         <div style="font-size: 13px; color: #6c757d; margin-bottom: 10px;">${product.description}</div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div style="font-size: 11px; color: #28a745;">Relevance: ${product.relevanceScore}%</div>
-          <div style="font-size: 11px; color: #007cba; font-weight: 600;">Click to view →</div>
+                      <div style="font-size: 11px; color: ${widgetSettings.primaryColor}; font-weight: 600;">Click to view →</div>
         </div>
       `;
       
@@ -320,9 +330,9 @@ This creates a floating chat widget that can be added to any page
       // Add hover effects
       productContent.addEventListener('mouseenter', function() {
         this.style.backgroundColor = '#e9ecef';
-        this.style.borderColor = '#007cba';
+        this.style.borderColor = '${widgetSettings.primaryColor}';
         this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 4px 12px rgba(0, 124, 186, 0.15)';
+        this.style.boxShadow = '0 4px 12px rgba(238, 92, 238, 0.15)';
       });
       
       productContent.addEventListener('mouseleave', function() {
@@ -374,21 +384,13 @@ This creates a floating chat widget that can be added to any page
       
       // Try to fetch updated settings from API
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
+      // Use app proxy URL (proper way for theme extensions)
+      const shopUrl = '{{ shop.url }}';
       const possibleSettingsUrls = [
-        // Current tunnel URL from logs
-        'https://lemon-yes-patterns-clerk.trycloudflare.com/api/widget-settings',
-        // Common CloudFlare tunnel patterns
-        'https://modest-truth-plans-proof.trycloudflare.com/api/widget-settings',
-        'https://serious-flows-goals-places.trycloudflare.com/api/widget-settings',
-        'https://busy-signs-visits-gm.trycloudflare.com/api/widget-settings',
-        'https://new-stones-bless-gm.trycloudflare.com/api/widget-settings',
-        // Try with current host (useful for local development)
-        window.location.protocol + '//' + window.location.host + '/api/widget-settings',
-        // Try localhost patterns with correct development server port
-        'http://localhost:54124/api/widget-settings',
-        'https://localhost:54124/api/widget-settings',
-        'http://localhost:52137/api/widget-settings',
-        'https://localhost:52137/api/widget-settings'
+        // Use app proxy URL - requests are forwarded to your app server
+        shopUrl + '/apps/widget-settings',
+        // Fallback to current host
+        window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
       
       let apiSuccess = false;
@@ -489,19 +491,22 @@ This creates a floating chat widget that can be added to any page
             </button>
           </div>
           
-          <!-- Chat Messages -->
-          <div id="ai-chat-messages" class="ai-chat-messages">
-            <div class="ai-message assistant-message">
-              <div class="message-content" style="background-color: #f1f1f1; color: #333;">
-                ${widgetSettings.welcomeMessage}
+          <!-- Chat Messages Container -->
+          <div class="ai-chat-messages-container">
+            <!-- Chat Messages -->
+            <div id="ai-chat-messages" class="ai-chat-messages">
+              <div class="ai-message assistant-message">
+                <div class="message-content" style="background-color: #f1f1f1; color: #333;">
+                  ${widgetSettings.welcomeMessage}
+                </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Loading Indicator -->
-          <div id="ai-loading" class="ai-loading" style="display: none;">
-            <div class="loading-dots">
-              <span></span><span></span><span></span>
+            
+            <!-- Loading Indicator -->
+            <div id="ai-loading" class="ai-loading" style="display: none;">
+              <div class="loading-dots">
+                <span></span><span></span><span></span>
+              </div>
             </div>
           </div>
           
@@ -575,7 +580,7 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-toggle {
-  background: #007cba;
+  background: ${widgetSettings.primaryColor};
   border: none;
   border-radius: 50px;
   color: white;
@@ -608,10 +613,15 @@ This creates a floating chat widget that can be added to any page
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  display: flex;
-  flex-direction: column;
+  display: grid !important;
+  grid-template-rows: 60px 1fr 70px !important;
+  grid-template-areas: 
+    "header"
+    "messages"
+    "input" !important;
   overflow: hidden;
-  max-height: 500px; /* Ensure fixed height */
+  max-height: 500px !important; /* Ensure fixed height */
+  min-height: 500px !important; /* Prevent shrinking */
 }
 
 .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
@@ -635,12 +645,16 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-header {
-  background: #007cba;
+  background: ${widgetSettings.primaryColor};
   color: white;
   padding: 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  z-index: 10;
+  height: 60px; /* Fixed header height */
+  box-sizing: border-box;
+  grid-area: header !important;
 }
 
 .ai-chat-header h3 {
@@ -670,17 +684,30 @@ This creates a floating chat widget that can be added to any page
   background: rgba(255, 255, 255, 0.1);
 }
 
+.ai-chat-messages-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #fafafa;
+  box-sizing: border-box;
+  grid-area: messages !important;
+}
+
 .ai-chat-messages {
   flex: 1;
   padding: 15px;
-  overflow-y: auto; /* Show scrollbar only when content overflows */
-  overflow-x: hidden;
+  padding-bottom: 25px; /* Extra padding at bottom */
+  overflow-y: auto !important; /* Show scrollbar only when content overflows */
+  overflow-x: hidden !important;
   display: flex;
   flex-direction: column;
   gap: 12px;
   scroll-behavior: smooth;
-  min-height: 0; /* Important for flex scrolling */
-  height: calc(500px - 140px); /* Fixed height for proper scrolling */
+  min-height: 0 !important; /* Important for flex scrolling */
+  height: 100% !important; /* Take full available height */
+  box-sizing: border-box !important;
+  background: #fafafa; /* Light background to distinguish from header/footer */
 }
 
 /* Custom scrollbar styling for webkit browsers */
@@ -709,7 +736,11 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-message {
-  max-width: 85%;
+  max-width: 85% !important;
+  width: fit-content;
+  overflow: visible !important; /* Allow content to show fully */
+  display: block !important;
+  box-sizing: border-box !important;
 }
 
 .ai-message.user-message {
@@ -742,11 +773,23 @@ This creates a floating chat widget that can be added to any page
   border-radius: 18px;
   font-size: 14px;
   line-height: 1.4;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto;
+  max-width: 100% !important;
+  white-space: pre-wrap !important; /* Preserve line breaks and wrap text */
+  box-sizing: border-box !important;
+  overflow: visible !important; /* Allow content to show fully */
 }
 
 .ai-loading {
   padding: 10px 15px;
   text-align: center;
+  margin-bottom: 10px; /* Ensure proper spacing */
+  flex-shrink: 0; /* Prevent loading from affecting layout */
+  background: #fafafa; /* Match messages background */
+  border-top: 1px solid #e5e5e5;
 }
 
 .loading-dots {
@@ -758,7 +801,7 @@ This creates a floating chat widget that can be added to any page
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #007cba;
+  background: ${widgetSettings.primaryColor};
   animation: loading-bounce 1.4s ease-in-out infinite both;
 }
 
@@ -775,8 +818,13 @@ This creates a floating chat widget that can be added to any page
   border-top: 1px solid #e5e5e5;
   display: flex;
   gap: 10px;
-  flex-shrink: 0; /* Prevent input from shrinking */
-  background: white; /* Ensure solid background */
+  align-items: center;
+  background: white !important; /* Ensure solid background */
+  z-index: 10; /* Keep above other content */
+  height: 70px !important; /* Fixed height to prevent shifting */
+  box-sizing: border-box !important;
+  border-radius: 0 0 12px 12px; /* Match window border radius */
+  grid-area: input !important;
 }
 
 .ai-chat-input input {
@@ -789,11 +837,11 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input input:focus {
-  border-color: #007cba;
+  border-color: ${widgetSettings.primaryColor};
 }
 
 .ai-chat-input button {
-  background: #007cba;
+  background: ${widgetSettings.primaryColor};
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -806,7 +854,7 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input button:hover {
-  background: #005a8c;
+  background: ${widgetSettings.primaryColor}dd;
 }
 
 /* Mobile responsiveness */
@@ -834,6 +882,18 @@ This creates a floating chat widget that can be added to any page
   .ai-chat-toggle .button-text {
     display: none;
   }
+  
+  .ai-message {
+    max-width: 90%; /* Allow more width on mobile */
+  }
+  
+  .message-content {
+    font-size: 13px; /* Slightly smaller font on mobile */
+  }
+  
+  .ai-chat-input {
+    padding: 12px; /* Reduce padding on mobile */
+  }
 }
     `;
     document.head.appendChild(style);
@@ -859,20 +919,10 @@ This creates a floating chat widget that can be added to any page
     try {
       const shopDomain = window.Shopify?.shop || '{{ shop.permanent_domain }}';
       const urlsToTry = workingApiUrl ? [workingApiUrl] : [
-        // Current tunnel URL from logs
-        'https://lemon-yes-patterns-clerk.trycloudflare.com/api/widget-settings',
-        // Common CloudFlare tunnel patterns
-        'https://modest-truth-plans-proof.trycloudflare.com/api/widget-settings',
-        'https://serious-flows-goals-places.trycloudflare.com/api/widget-settings',
-        'https://busy-signs-visits-gm.trycloudflare.com/api/widget-settings',
-        'https://new-stones-bless-gm.trycloudflare.com/api/widget-settings',
-        // Try with current host (useful for local development)
-        window.location.protocol + '//' + window.location.host + '/api/widget-settings',
-        // Try localhost patterns with correct development server port
-        'http://localhost:54124/api/widget-settings',
-        'https://localhost:54124/api/widget-settings',
-        'http://localhost:52137/api/widget-settings',
-        'https://localhost:52137/api/widget-settings'
+        // Use app proxy URL - properly forwarded to your app server
+        '{{ shop.url }}' + '/apps/widget-settings',
+        // Fallback to current host
+        window.location.protocol + '//' + window.location.host + '/apps/widget-settings'
       ];
       
       for (const url of urlsToTry) {

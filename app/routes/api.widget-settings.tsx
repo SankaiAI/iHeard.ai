@@ -10,7 +10,7 @@ const DEFAULT_SETTINGS = {
   chatTitle: "AI Sales Assistant",
   welcomeMessage: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
   inputPlaceholder: "Ask me anything about our products...",
-  primaryColor: "#007cba",
+  primaryColor: "#e620e6",
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
