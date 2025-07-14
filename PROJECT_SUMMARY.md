@@ -1,4 +1,4 @@
-# iHear.ai - Shopify AI Sales Assistant App
+# iHeard.ai - Shopify AI Sales Assistant App
 
 ## Overview
 

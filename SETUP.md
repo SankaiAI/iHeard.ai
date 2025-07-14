@@ -89,7 +89,7 @@ redirect_urls = [
 1. In Partner Dashboard, click "Apps" → "Create app"
 2. Choose "Create app manually"
 3. Fill in the app details:
-   - **App name**: `ihear.ai` (or your preferred name)
+   - **App name**: `iheard.ai` (or your preferred name)
    - **App URL**: Leave blank for now (will be auto-filled)
    - **Allowed redirection URL(s)**: Leave blank for now
 

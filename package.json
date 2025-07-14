@@ -1,5 +1,5 @@
 {
-  "name": "ihear-ai",
+  "name": "iheard-ai",
   "private": true,
   "scripts": {
     "build": "remix vite:build",
