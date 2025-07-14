@@ -152,7 +152,9 @@ This creates a floating chat widget that can be added to any page
       window.location.protocol + '//' + window.location.host,
       // Try with ngrok pattern
       '{{ shop.permanent_domain | replace: ".myshopify.com", "" | prepend: "https://" | append: ".ngrok.io" }}',
-      // Try localhost patterns
+      // Try localhost patterns with correct development server port
+      'http://localhost:54124',
+      'https://localhost:54124',
       'http://localhost:52137',
       'https://localhost:52137'
     ];
@@ -382,26 +384,43 @@ This creates a floating chat widget that can be added to any page
         'https://new-stones-bless-gm.trycloudflare.com/api/widget-settings',
         // Try with current host (useful for local development)
         window.location.protocol + '//' + window.location.host + '/api/widget-settings',
-        // Try localhost patterns
+        // Try localhost patterns with correct development server port
+        'http://localhost:54124/api/widget-settings',
+        'https://localhost:54124/api/widget-settings',
         'http://localhost:52137/api/widget-settings',
         'https://localhost:52137/api/widget-settings'
       ];
       
+      let apiSuccess = false;
       for (const appUrl of possibleSettingsUrls) {
         try {
+          console.log(`🔄 AI Widget: Trying to fetch settings from ${appUrl}`);
           const timestamp = Date.now();
           const response = await fetch(`${appUrl}?shop=${shopDomain}&t=${timestamp}`);
           if (response.ok) {
             const data = await response.json();
+            console.log(`✅ AI Widget: Successfully fetched settings from ${appUrl}`, data.settings);
+            
             // Prioritize API settings over block settings
             widgetSettings = { ...blockSettings, ...data.settings };
-            console.log(`AI Widget: Successfully fetched settings from ${appUrl}`, data.settings);
+            apiSuccess = true;
+            
+            // Initialize lastSettingsUpdate with current timestamp for auto-refresh
+            if (typeof window.lastSettingsUpdate === 'undefined') {
+              window.lastSettingsUpdate = data.settings.updatedAt;
+            }
             break;
+          } else {
+            console.log(`❌ AI Widget: Failed to fetch from ${appUrl} - Status: ${response.status}`);
           }
         } catch (e) {
-          console.log(`Failed to fetch from ${appUrl}:`, e);
+          console.log(`❌ AI Widget: Error fetching from ${appUrl}:`, e);
           continue;
         }
+      }
+      
+      if (!apiSuccess) {
+        console.log('⚠️ AI Widget: Could not fetch settings from API, using block settings', blockSettings);
       }
       
       // Debug logging
@@ -415,6 +434,14 @@ This creates a floating chat widget that can be added to any page
       
       // Create the widget HTML
       createWidget();
+      
+      // Add debugging to console to verify settings are applied
+      console.log('AI Widget: Widget created with settings:', {
+        position: widgetSettings.position,
+        primaryColor: widgetSettings.primaryColor,
+        buttonText: widgetSettings.buttonText,
+        chatTitle: widgetSettings.chatTitle
+      });
       
     } catch (error) {
       console.error('Failed to load AI Sales Assistant settings:', error);
@@ -812,6 +839,12 @@ This creates a floating chat widget that can be added to any page
     document.head.appendChild(style);
   }
   
+  // Add manual refresh function for debugging
+  window.refreshAIWidget = async function() {
+    console.log('🔄 AI Widget: Manual refresh triggered');
+    await initializeWidget();
+  };
+  
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeWidget);
@@ -819,8 +852,7 @@ This creates a floating chat widget that can be added to any page
     initializeWidget();
   }
   
-  // Check for setting updates every 5 seconds
-  let lastSettingsUpdate = null;
+  // Check for setting updates every 2 seconds (faster for development)
   let workingApiUrl = null; // Cache the working URL to avoid testing all URLs every time
   
   setInterval(async () => {
@@ -836,7 +868,9 @@ This creates a floating chat widget that can be added to any page
         'https://new-stones-bless-gm.trycloudflare.com/api/widget-settings',
         // Try with current host (useful for local development)
         window.location.protocol + '//' + window.location.host + '/api/widget-settings',
-        // Try localhost patterns
+        // Try localhost patterns with correct development server port
+        'http://localhost:54124/api/widget-settings',
+        'https://localhost:54124/api/widget-settings',
         'http://localhost:52137/api/widget-settings',
         'https://localhost:52137/api/widget-settings'
       ];
@@ -851,12 +885,22 @@ This creates a floating chat widget that can be added to any page
             // Cache the working URL
             if (!workingApiUrl) workingApiUrl = url;
             
-            if (lastSettingsUpdate && currentUpdate !== lastSettingsUpdate) {
-              console.log('AI Widget: Settings updated, refreshing widget...');
+            if (window.lastSettingsUpdate && currentUpdate !== window.lastSettingsUpdate) {
+              console.log('🔄 AI Widget: Settings updated, refreshing widget...', {
+                old: window.lastSettingsUpdate,
+                new: currentUpdate,
+                newSettings: data.settings
+              });
               widgetSettings = { ...blockSettings, ...data.settings };
               createWidget();
+              console.log('✅ AI Widget: Widget refreshed with new settings');
+            } else if (window.lastSettingsUpdate) {
+              console.log('ℹ️ AI Widget: No settings changes detected', {
+                current: window.lastSettingsUpdate,
+                fetched: currentUpdate
+              });
             }
-            lastSettingsUpdate = currentUpdate;
+            window.lastSettingsUpdate = currentUpdate;
             break; // Success, stop trying other URLs
           }
         } catch (e) {
@@ -868,6 +912,6 @@ This creates a floating chat widget that can be added to any page
     } catch (e) {
       // Silently fail
     }
-  }, 5000);
+  }, 2000); // 2 seconds for faster development feedback
 })();
 </script> 

@@ -30,9 +30,18 @@ export class N8NService {
   private apiKey?: string;
 
   constructor(webhookUrl?: string, apiKey?: string) {
-    // Default to a placeholder URL - you'll need to replace this with your actual N8N webhook URL
+    // Prioritize: 1) passed parameter, 2) environment variable, 3) fallback placeholder
     this.webhookUrl = webhookUrl || process.env.N8N_WEBHOOK_URL || 'https://your-n8n-instance.com/webhook/sales-assistant';
     this.apiKey = apiKey || process.env.N8N_API_KEY;
+    
+    // Log the webhook URL being used for debugging
+    console.log('🔧 N8N Service: Using webhook URL:', this.webhookUrl);
+    console.log('🔧 N8N Service: Using API key:', this.apiKey ? '[CONFIGURED]' : '[NOT SET]');
+    
+    // Log important note about webhook URL format
+    if (this.webhookUrl.includes('/webhook/webhook/')) {
+      console.warn('⚠️ N8N Service: Webhook URL contains duplicate /webhook/ - this might cause 404 errors');
+    }
   }
 
   async processUserMessage(request: N8NRequest): Promise<N8NWebhookResponse> {
@@ -131,8 +140,5 @@ export class N8NService {
   }
 }
 
-// Export a default instance with production webhook URL
-export const n8nService = new N8NService(
-  'https://sanluna.app.n8n.cloud/webhook/webhook/sales-assistant',
-  'your_n8n_api_key_here'
-); 
+// Export a default instance that prioritizes environment variables
+export const n8nService = new N8NService(); 
