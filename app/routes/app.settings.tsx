@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useActionData, useLoaderData, useSubmit } from "@remix-run/react";
@@ -178,6 +178,14 @@ export default function SettingsPage() {
   
   const [settings, setSettings] = useState(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+
+  // Show success banner when settings are saved
+  useEffect(() => {
+    if (actionData?.success) {
+      setShowSuccessBanner(true);
+    }
+  }, [actionData]);
 
   const handleSave = useCallback(() => {
     setIsSaving(true);
@@ -211,9 +219,9 @@ export default function SettingsPage() {
       }}
     >
       <Layout>
-        {actionData?.success && (
+        {showSuccessBanner && actionData?.success && (
           <Layout.Section>
-            <Banner tone="success" onDismiss={() => {}}>
+            <Banner tone="success" onDismiss={() => setShowSuccessBanner(false)}>
               <p>{actionData.message}</p>
             </Banner>
           </Layout.Section>
@@ -241,7 +249,7 @@ export default function SettingsPage() {
                   options={positionOptions}
                   value={settings.position}
                   onChange={(value) => 
-                    setSettings(prev => ({ ...prev, position: value }))
+                    setSettings((prev: SettingsType) => ({ ...prev, position: value }))
                   }
                   helpText="Choose where the widget appears on your store pages"
                 />
@@ -250,7 +258,7 @@ export default function SettingsPage() {
                   label="Button Text"
                   value={settings.buttonText}
                   onChange={(value) => 
-                    setSettings(prev => ({ ...prev, buttonText: value }))
+                    setSettings((prev: SettingsType) => ({ ...prev, buttonText: value }))
                   }
                   helpText="Text displayed on the chat button"
                   autoComplete="off"
@@ -260,7 +268,7 @@ export default function SettingsPage() {
                   label="Chat Title"
                   value={settings.chatTitle}
                   onChange={(value) => 
-                    setSettings(prev => ({ ...prev, chatTitle: value }))
+                    setSettings((prev: SettingsType) => ({ ...prev, chatTitle: value }))
                   }
                   helpText="Title shown in the chat window header"
                   autoComplete="off"
@@ -270,7 +278,7 @@ export default function SettingsPage() {
                   label="Welcome Message"
                   value={settings.welcomeMessage}
                   onChange={(value) => 
-                    setSettings(prev => ({ ...prev, welcomeMessage: value }))
+                    setSettings((prev: SettingsType) => ({ ...prev, welcomeMessage: value }))
                   }
                   multiline={4}
                   helpText="First message customers see when they open the chat"
@@ -281,7 +289,7 @@ export default function SettingsPage() {
                   label="Input Placeholder"
                   value={settings.inputPlaceholder}
                   onChange={(value) => 
-                    setSettings(prev => ({ ...prev, inputPlaceholder: value }))
+                    setSettings((prev: SettingsType) => ({ ...prev, inputPlaceholder: value }))
                   }
                   helpText="Placeholder text in the message input field"
                   autoComplete="off"

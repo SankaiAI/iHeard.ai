@@ -37,6 +37,9 @@ export class N8NService {
 
   async processUserMessage(request: N8NRequest): Promise<N8NWebhookResponse> {
     try {
+      console.log('🚀 N8N Service: Attempting to call webhook:', this.webhookUrl);
+      console.log('📤 N8N Service: Request payload:', JSON.stringify(request, null, 2));
+      
       const headers: any = {
         'Content-Type': 'application/json',
       };
@@ -50,10 +53,20 @@ export class N8NService {
         timeout: 30000, // 30 second timeout
       });
 
+      console.log('✅ N8N Service: Success! Response:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('N8N Service Error:', error);
+    } catch (error: any) {
+      console.error('❌ N8N Service Error - Full details:');
+      console.error('Error message:', error?.message);
+      console.error('Error response:', error?.response?.data);
+      console.error('Error status:', error?.response?.status);
+      console.error('Error config:', {
+        url: error?.config?.url,
+        method: error?.config?.method,
+        headers: error?.config?.headers
+      });
       
+      console.log('🔄 N8N Service: Falling back to local processing');
       // Fallback to local processing if N8N is unavailable
       return this.fallbackProcessing(request);
     }
@@ -118,5 +131,8 @@ export class N8NService {
   }
 }
 
-// Export a default instance
-export const n8nService = new N8NService(); 
+// Export a default instance with production webhook URL
+export const n8nService = new N8NService(
+  'https://sanluna.app.n8n.cloud/webhook/webhook/sales-assistant',
+  'your_n8n_api_key_here'
+); 
