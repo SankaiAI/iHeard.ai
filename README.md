@@ -163,10 +163,9 @@ npx prisma studio
 3. Set proxy URL to: `https://NEW-TUNNEL-URL.trycloudflare.com/api/widget-settings`
 
 **Why this matters:**
-- The widget needs to fetch settings AND send chat messages through your app's API
-- This single proxy endpoint handles both widget settings (GET) and N8N chat messages (POST)
+- The widget needs to fetch settings from your app's API
 - Tunnel URLs change on each restart for security
-- Without updating the proxy URL, you'll get "Failed to fetch" errors for both settings and chat
+- Without updating the proxy URL, you'll get "Failed to fetch" errors
 
 See `SETUP.md` for detailed instructions on app proxy configuration.
 
@@ -182,9 +181,7 @@ The widget is built as a Shopify theme extension block that can be added to any 
 ### API Endpoints
 
 - `GET /api/widget-settings` - Fetch widget configuration
-- `POST /api/widget-settings` - Process AI chat messages and forward to N8N webhook
-
-**Note**: Both endpoints use the same route but handle different HTTP methods through the app proxy.
+- `POST /apps/sales-assistant-api` - Process AI chat messages
 
 ## 🤖 AI Integration
 
