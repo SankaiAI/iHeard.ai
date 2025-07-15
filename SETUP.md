@@ -176,8 +176,10 @@ The AI Sales Assistant widget needs to fetch settings from your app's API. This 
 
 3. **Configure the proxy settings**:
    - **Subpath prefix**: `apps`
-   - **Subpath**: `ihear-ai` (or your preferred name)
+   - **Subpath**: `widget-settings`
    - **Proxy URL**: `https://your-tunnel-url.trycloudflare.com/api/widget-settings`
+   
+   **Important**: This single proxy handles both widget settings and chat messages to N8N webhook.
 
 4. **Save the configuration**
 
@@ -191,15 +193,20 @@ The AI Sales Assistant widget needs to fetch settings from your app's API. This 
    - Check the `application_url` in `shopify.app.toml`
    - Or look for it in the terminal output when running `shopify app dev`
 
-2. **Update the Proxy URL**:
+2. **Update the Single Proxy URL**:
    - Go to Partner Dashboard → Apps → [Your App] → App setup
    - Find the "App proxy" section
    - Update the **Proxy URL** to: `https://NEW-TUNNEL-URL.trycloudflare.com/api/widget-settings`
    - Save the changes
+   
+   **Note**: This single proxy endpoint handles both:
+   - **Widget settings** (GET requests)
+   - **Chat messages to N8N** (POST requests)
 
 3. **Verify the update**:
    - Test the widget settings in your admin panel
-   - The settings should save without "Failed to fetch" errors
+   - Test sending chat messages in the widget
+   - Both should work without "Failed to fetch" errors
 
 ### Why This Happens
 
@@ -246,24 +253,33 @@ After the app is running:
    - Check if the app embed is enabled in theme customizer
    - Verify the widget is enabled in admin settings
 
-5. **"Failed to fetch" errors when saving widget settings**
+5. **"Failed to fetch" errors when saving widget settings or sending chat messages**
    - ⚠️ **Most common local development issue**
    - Check if you've updated the app proxy URL in Partner Dashboard
    - Verify the proxy URL matches your current tunnel URL from `shopify.app.toml`
    - Restart `shopify app dev` and update the proxy URL again
+   - Remember: The same proxy handles both settings (GET) and chat (POST)
 
 6. **Widget settings not loading on storefront**
    - Check browser developer console for CORS errors
    - Verify the app proxy is properly configured
    - Test the API endpoint directly: `https://your-tunnel-url.trycloudflare.com/api/widget-settings`
 
+7. **Chat messages not reaching N8N webhook**
+   - Check your development server logs for "🎯 Chat Message via Widget Settings Route"
+   - Verify your `.env` file has the correct `N8N_WEBHOOK_URL`
+   - Test N8N webhook directly with curl or Postman
+   - Ensure N8N workflow is activated and webhook trigger is properly configured
+
 ### Development Workflow Checklist
 
 Every time you restart `shopify app dev`:
 
 - [ ] Note the new tunnel URL from `shopify.app.toml`
-- [ ] Update the app proxy URL in Shopify Partner Dashboard
-- [ ] Test widget settings save functionality
+- [ ] Update the single app proxy URL in Shopify Partner Dashboard
+- [ ] Test widget settings save functionality (GET requests)
+- [ ] Test chat message functionality (POST requests)
+- [ ] Verify N8N webhook receives chat messages
 - [ ] Verify widget loads properly on storefront
 
 ### Getting Help

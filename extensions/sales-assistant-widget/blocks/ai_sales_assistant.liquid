@@ -139,67 +139,48 @@ This creates a floating chat widget that can be added to any page
     // Show loading
     showLoading(true);
     
-    // Send to AI service - try multiple possible URLs
-    const possibleAppUrls = [
-      // Current tunnel URL from logs
-      'https://lemon-yes-patterns-clerk.trycloudflare.com',
-      // Common CloudFlare tunnel patterns
-      'https://modest-truth-plans-proof.trycloudflare.com',
-      'https://serious-flows-goals-places.trycloudflare.com',
-      'https://busy-signs-visits-gm.trycloudflare.com',
-      'https://new-stones-bless-gm.trycloudflare.com',
-      // Try with current host (useful for local development)
-      window.location.protocol + '//' + window.location.host,
-      // Try with ngrok pattern
-      '{{ shop.permanent_domain | replace: ".myshopify.com", "" | prepend: "https://" | append: ".ngrok.io" }}',
-      // Try localhost patterns with correct development server port
-      'http://localhost:54124',
-      'https://localhost:54124',
-      'http://localhost:52137',
-      'https://localhost:52137'
-    ];
+    // Send message to AI service using the same app proxy as widget settings
+    const shopUrl = '{{ shop.url }}';
     
-        // Function to try API call with different URLs
-    const tryApiCall = async (urls) => {
-      console.log('🔍 Trying API endpoints:', urls);
-      for (const apiUrl of urls) {
-        console.log(`🚀 Attempting API call to: ${apiUrl}`);
-        try {
-          const response = await fetch(`${apiUrl}/apps/sales-assistant-api`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Shopify-Shop-Domain': '{{ shop.myshopify_domain }}',
-              'X-Shopify-Customer-Access-Token': '{{ customer.access_token | default: "" }}',
-            },
-            body: JSON.stringify({
-              userMessage: message,
-              products: [],
-              context: {
-                page: window.location.pathname,
-                productId: getProductIdFromPage(),
-                conversationHistory: conversationHistory,
-                shopDomain: '{{ shop.myshopify_domain }}'
-              }
-            })
-          });
-          
-          if (response.ok) {
-            console.log(`✅ Success! API call to ${apiUrl} worked`);
-            return await response.json();
-          } else {
-            console.log(`❌ API call to ${apiUrl} failed with status:`, response.status);
-          }
-        } catch (error) {
-          console.log(`❌ Failed to reach API at ${apiUrl}:`, error);
-          continue;
+    // Function to try API call using app proxy (same endpoint as settings but with POST)
+    const tryApiCall = async () => {
+      const apiUrl = shopUrl + '/apps/widget-settings'; // Use existing app proxy URL
+      console.log(`🚀 Sending message to AI via app proxy: ${apiUrl}`);
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Shop-Domain': '{{ shop.myshopify_domain }}',
+            'X-Shopify-Customer-Access-Token': '{{ customer.access_token | default: "" }}',
+          },
+          body: JSON.stringify({
+            userMessage: message,
+            products: [],
+            context: {
+              page: window.location.pathname,
+              productId: getProductIdFromPage(),
+              conversationHistory: conversationHistory,
+              shopDomain: '{{ shop.myshopify_domain }}'
+            }
+          })
+        });
+        
+        if (response.ok) {
+          console.log(`✅ Success! Message sent to AI via app proxy`);
+          return await response.json();
+        } else {
+          console.log(`❌ App proxy API call failed with status:`, response.status);
+          throw new Error(`API call failed with status: ${response.status}`);
         }
+      } catch (error) {
+        console.log(`❌ Failed to reach AI API via app proxy:`, error);
+        throw error;
       }
-      throw new Error('All API endpoints failed');
     };
     
     // Try the API call
-    tryApiCall(possibleAppUrls)
+    tryApiCall()
       .then(data => {
       showLoading(false);
       

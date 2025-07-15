@@ -135,13 +135,26 @@ Customize AI responses by:
 
 ## API Reference
 
+### App Proxy Configuration
+
+The application uses a **single app proxy endpoint** that handles both widget settings and chat messages:
+
+**App Proxy Setup in Shopify Partner Dashboard:**
+- **Subpath prefix**: `apps`
+- **Subpath**: `widget-settings`
+- **Proxy URL**: `https://your-tunnel-url.trycloudflare.com/api/widget-settings`
+
+**Request Handling:**
+- **GET requests**: Returns widget configuration from database
+- **POST requests**: Processes chat messages and forwards to N8N webhook
+
 ### Sales Assistant API
-**Endpoint**: `/apps/sales-assistant-api`
+**Endpoint**: `/api/widget-settings` (POST method via app proxy)
 
 **POST Request**:
 ```json
 {
-  "message": "I need a red dress for a wedding",
+  "userMessage": "I need a red dress for a wedding",
   "context": {
     "page": "/products/example-product",
     "productId": "123456789",
