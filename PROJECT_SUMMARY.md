@@ -18,10 +18,12 @@ iHear.ai is a Shopify embedded app that provides an AI-powered sales assistant t
 - **Product Data Access**: Real-time access to store products via GraphQL API
 - **Secure Authentication**: Proper Shopify OAuth and session management
 
-### 🔧 N8N Backend Integration
-- **Workflow Processing**: Uses N8N for AI processing and decision-making
-- **Fallback System**: Local processing when N8N is unavailable
-- **Extensible Architecture**: Easy to add new AI services and workflows
+### 🔧 AI Workflow Configuration
+- **Dual Workflow Support**: Default developer workflow or custom N8N integration
+- **Admin Panel Configuration**: Easy per-store webhook URL setup
+- **Dynamic Switching**: Switch between workflows without code changes
+- **Fallback System**: Automatic fallback to local processing when webhooks fail
+- **Per-Store Customization**: Each store can use different AI workflows
 
 ## Project Structure
 
@@ -119,19 +121,49 @@ npm run deploy
 
 ## Customization
 
-### Theme Extension Settings
-The theme extension can be customized through the Shopify theme editor:
+### Admin Settings Panel
+Configure the widget through the comprehensive admin panel at `/app/settings`:
+
+**Widget Configuration:**
+- **Enable/Disable**: Toggle widget on/off across the store
+- **Position Settings**: 6 positioning options (corners and center sides)
 - **Button Text**: Customize the chat button text
 - **Chat Title**: Set the chat window title
 - **Welcome Message**: Customize the initial greeting
 - **Input Placeholder**: Set placeholder text for the input field
-- **Primary Color**: Change the color scheme
+- **Primary Color**: Full color picker with real-time preview
+- **Live Preview**: See changes instantly in the preview area
 
-### AI Responses
-Customize AI responses by:
-1. Modifying the N8N workflow
-2. Updating the fallback logic in `n8n.service.ts`
-3. Adding new conversation patterns
+**AI Workflow Configuration:**
+- **Workflow Type Selection**: Choose between default and custom N8N workflows
+- **Default Workflow**: Pre-configured AI assistant with product recommendations
+- **Custom N8N Workflow**: Configure your own webhook URL for advanced AI processing
+- **Dynamic Switching**: Switch between workflows without code changes
+- **Per-Store Configuration**: Each store can have its own AI workflow settings
+
+**Settings Management:**
+- **Auto-Sync**: Changes update the storefront within 5 seconds
+- **Database Persistence**: Settings survive server restarts
+- **Fallback Protection**: Automatic fallback if APIs are unavailable
+
+### AI Workflow Customization
+Multiple ways to customize AI responses:
+
+**Option 1: Use Default Workflow**
+- Pre-configured product recommendations
+- Built-in customer query handling
+- No setup required
+
+**Option 2: Custom N8N Workflow**
+- Configure through admin panel (no code changes needed)
+- Integrate with external AI services (OpenAI, Claude, etc.)
+- Custom business logic and integrations
+- Advanced analytics and tracking
+
+**Option 3: Code-Level Customization**
+- Modify the fallback logic in `n8n.service.ts`
+- Add new conversation patterns
+- Update default response templates
 
 ## API Reference
 

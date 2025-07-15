@@ -4,7 +4,33 @@ This guide explains how to set up the N8N backend for the AI Sales Assistant in 
 
 ## Overview
 
-The AI Sales Assistant uses N8N workflows to process customer messages and provide intelligent product recommendations. N8N acts as the backend processing engine that can integrate with various AI services, databases, and APIs.
+The AI Sales Assistant supports two workflow modes:
+
+1. **Default Developer Workflow** - Pre-configured AI assistant (no setup required)
+2. **Custom N8N Workflow** - Your own N8N setup for advanced customization
+
+This guide covers setting up the **Custom N8N Workflow** option. The custom workflow allows you to:
+
+- Use advanced AI models (OpenAI GPT-4, Claude, etc.)
+- Integrate with external databases and CRMs
+- Implement custom business logic
+- Track and analyze customer interactions
+- Create personalized shopping experiences
+
+## Configuration Options
+
+You can configure your N8N webhook URL in two ways:
+
+**Option A: Admin Panel (Recommended)**
+- Configure per-store through the app's admin panel
+- Go to App Settings → AI Workflow Configuration
+- Select "Use My Custom N8N Workflow"
+- Enter your webhook URL and save
+
+**Option B: Environment Variable**
+- Set `N8N_WEBHOOK_URL` in your `.env` file
+- Applies as default for all stores
+- Individual stores can override through admin panel
 
 ## N8N Workflow Setup
 
@@ -280,6 +306,69 @@ You can enhance the workflow with:
 - Validate input data in N8N workflows
 - Store API keys securely
 - Rate limit webhook calls
+
+## Admin Panel Configuration
+
+Once your N8N workflow is ready, configure it through the admin panel:
+
+### Step-by-Step Configuration
+
+1. **Access Admin Panel**
+   - Go to your Shopify app at `/app/settings`
+   - Look for the "AI Workflow Configuration" section
+
+2. **Select Custom Workflow**
+   - Choose "Use My Custom N8N Workflow" from the dropdown
+   - The custom webhook URL field will become enabled
+
+3. **Enter Webhook URL**
+   - Paste your N8N webhook URL (must be HTTPS)
+   - Example: `https://your-n8n.app.n8n.cloud/webhook/sales-assistant`
+   - Click "Save Settings"
+
+4. **Test the Integration**
+   - Go to your storefront
+   - Open the AI chat widget
+   - Send a test message
+   - Verify you receive a response from your N8N workflow
+
+### Per-Store Configuration
+
+**Multiple Stores**: Each store can have its own N8N configuration
+- Store A: Default developer workflow
+- Store B: Custom N8N workflow #1 (product recommendations)
+- Store C: Custom N8N workflow #2 (customer support)
+
+**Override Environment**: Admin panel settings override any environment variables
+- Environment `N8N_WEBHOOK_URL` sets the global default
+- Individual stores can specify their own webhook URLs
+- Changes take effect immediately (no restart required)
+
+### Troubleshooting
+
+**Common Issues:**
+
+1. **"Invalid URL" error**
+   - Ensure the URL starts with `https://`
+   - Check that the URL is accessible from the internet
+   - Test the webhook directly with a tool like Postman
+
+2. **No response from N8N**
+   - Check N8N workflow execution logs
+   - Verify the webhook trigger is properly configured
+   - Ensure the response format matches the expected JSON structure
+
+3. **Fallback responses**
+   - If your N8N webhook fails, the app automatically falls back to local processing
+   - Check the app's console logs for error details
+   - Fix the N8N issue and the app will automatically start using it again
+
+**Success Indicators:**
+- ✅ Dropdown shows "Use My Custom N8N Workflow"
+- ✅ Webhook URL field is enabled and filled
+- ✅ Settings save without errors
+- ✅ Widget responds with your N8N workflow's messages
+- ✅ N8N execution logs show successful webhook calls
 
 ### 9. Troubleshooting
 

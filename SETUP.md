@@ -48,6 +48,8 @@ N8N_WEBHOOK_URL=your_n8n_webhook_url_here
 1. **Install N8N**: Use Docker, npm, or N8N Cloud (see `N8N_SETUP.md` for details)
 2. **Create workflow**: Import the sales assistant workflow template
 3. **Get webhook URL**: Copy from the Webhook trigger node in your workflow
+
+> **Note**: You can also configure N8N webhook URLs on a per-store basis through the admin panel without setting this environment variable. See the "AI Workflow Configuration" section below.
 4. **Format**: `https://your-n8n-instance.com/webhook/abc123def456`
 5. **Test**: Send a test request to verify the webhook works
 
@@ -227,6 +229,63 @@ After the app is running:
 2. **Go to theme customizer**: Online Store → Themes → Customize
 3. **Add the widget**: Look for "AI Sales Assistant" in the app embeds section
 4. **Configure the widget**: Use the admin panel at `/app/settings` to customize
+
+## 🤖 AI Workflow Configuration
+
+The app supports two different AI workflow modes that can be configured through the admin panel:
+
+### Default Developer Workflow
+
+**What it is**: A pre-configured AI assistant that works out-of-the-box
+- ✅ **No setup required** - Works immediately after installation
+- ✅ **Product integration** - Automatically knows about your store's products
+- ✅ **Smart responses** - Handles product recommendations, pricing, shipping questions
+- ✅ **Fallback protection** - Always provides helpful responses
+
+**When to use**: Perfect for getting started quickly or if you don't need custom AI logic.
+
+### Custom N8N Workflow
+
+**What it is**: Integration with your own N8N workflow for advanced AI processing
+- 🎯 **Full customization** - Create any AI logic you want
+- 🔌 **External integrations** - Connect to OpenAI, Claude, databases, CRMs, etc.
+- 🧠 **Advanced AI** - Use latest AI models and custom prompts
+- 📊 **Analytics** - Track and analyze customer interactions
+
+**When to use**: When you need custom AI logic, external integrations, or specific business requirements.
+
+### How to Configure
+
+1. **Access admin panel**: Go to your app settings at `/app/settings`
+2. **Find AI Workflow Configuration section**
+3. **Choose your workflow type**:
+   - **"Use Developer's Default Workflow"** - Select this for the built-in AI assistant
+   - **"Use My Custom N8N Workflow"** - Select this to use your own N8N setup
+4. **If using custom**: Enter your N8N webhook URL (must be HTTPS)
+5. **Save settings** - Changes take effect immediately
+
+### Setting Up Custom N8N Workflow
+
+If you choose the custom option:
+
+1. **Set up N8N**: Follow the detailed guide in `N8N_SETUP.md`
+2. **Create workflow**: Build your AI processing workflow
+3. **Get webhook URL**: Copy the webhook URL from your N8N workflow
+4. **Configure in admin**: Paste the URL in the "Custom N8N Webhook URL" field
+5. **Test**: Send a test message through the widget to verify it works
+
+### Per-Store Configuration
+
+**Flexibility**: Each store can have its own configuration
+- Store A can use the default workflow
+- Store B can use custom N8N workflow #1  
+- Store C can use custom N8N workflow #2
+- All managed through their individual admin panels
+
+**Environment Variables**: 
+- `N8N_WEBHOOK_URL` in `.env` sets a global default
+- Individual stores can override this through the admin panel
+- Admin panel settings always take precedence
 
 ## 🔍 Troubleshooting
 

@@ -130,6 +130,12 @@ ihear-ai/
 - **Color Picker** - Fully functional color customization
 - **Live Preview** - See changes in real-time
 
+### AI Workflow Configuration
+- **Default Workflow** - Use the developer's pre-configured AI assistant with product recommendations
+- **Custom N8N Workflow** - Configure your own N8N webhook URL for custom AI processing
+- **Dynamic Switching** - Easily switch between default and custom workflows
+- **Fallback Protection** - Automatic fallback to local processing if webhooks fail
+
 ### Settings Auto-Sync
 - Changes in admin panel update the storefront within 5 seconds
 - Database persistence ensures settings survive server restarts
@@ -185,17 +191,39 @@ The widget is built as a Shopify theme extension block that can be added to any 
 
 ## 🤖 AI Integration
 
-### N8N Workflow (Optional)
+### Two Workflow Options
 
-The app supports integration with N8N for advanced AI processing:
+**1. Default Developer Workflow**
+- Pre-configured AI assistant with product recommendations
+- Works out-of-the-box with no additional setup
+- Integrated with your store's product catalog
+- Handles common customer queries automatically
 
-1. Set up an N8N instance
-2. Create a webhook workflow for processing chat messages
-3. Configure the webhook URL in your environment
+**2. Custom N8N Workflow**
+- Configure your own N8N webhook URL through the admin panel
+- Advanced AI processing with full customization
+- Integrate with external AI services (OpenAI, Claude, etc.)
+- Custom business logic and integrations
+
+### Configuration
+
+**Admin Panel Configuration:**
+1. Go to **App Settings** → **AI Workflow Configuration**
+2. Choose between "Use Developer's Default Workflow" or "Use My Custom N8N Workflow"
+3. If using custom: Enter your N8N webhook URL (must be HTTPS)
+4. Save settings - changes take effect immediately
+
+**Environment Configuration (Optional):**
+- Set `N8N_WEBHOOK_URL` in `.env` for a global default
+- Individual stores can override this with their own webhook URLs
+- Supports both shared and per-store N8N configurations
 
 ### Fallback Processing
 
-If N8N is unavailable, the app provides basic fallback responses to ensure the chat always works.
+The app provides robust fallback protection:
+- If custom webhook fails → Falls back to local processing
+- If network issues occur → Provides helpful default responses
+- Ensures chat widget always works regardless of external dependencies
 
 ## 🚀 Deployment
 
