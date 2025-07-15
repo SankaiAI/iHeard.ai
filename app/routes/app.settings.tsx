@@ -32,7 +32,7 @@ const DEFAULT_SETTINGS = {
   primaryColor: "#e620e6",
 };
 
-type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string };
+type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
 
 // Color conversion utility functions
 function hexToHsb(hex: string) {
@@ -150,6 +150,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     welcomeMessage: formData.get("welcomeMessage") as string,
     inputPlaceholder: formData.get("inputPlaceholder") as string,
     primaryColor: formData.get("primaryColor") as string,
+    // Handle webhookUrl properly - only include if it has a value
+    ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
   };
   
   // Save settings to database
@@ -303,13 +305,94 @@ export default function SettingsPage() {
                     color={hexToHsb(settings.primaryColor)}
                     onChange={(color) => {
                       const hex = hsbToHex(color);
-                      setSettings((prev) => ({ ...prev, primaryColor: hex }));
+                      setSettings((prev: any) => ({ ...prev, primaryColor: hex }));
                     }}
                   />
                   <Text variant="bodySm" as="p" tone="subdued">
                     Current color: {settings.primaryColor}
                   </Text>
                 </BlockStack>
+              </FormLayout>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text variant="headingMd" as="h2">
+                AI Workflow Configuration
+              </Text>
+              <Text variant="bodyMd" as="p" tone="subdued">
+                Choose which AI workflow to use for processing customer messages. You can use the developer's default workflow or configure your own N8N workflow.
+              </Text>
+              
+              <FormLayout>
+                <Select
+                  label="Workflow Type"
+                  value={(() => {
+                    const url = (settings as any).webhookUrl;
+                    const isValidCustomUrl = url && 
+                                           typeof url === 'string' && 
+                                           url.trim() !== '' && 
+                                           url !== 'https://' &&
+                                           url.startsWith('https://') &&
+                                           url.length > 8;
+                    return isValidCustomUrl ? "custom" : "default";
+                  })()}
+                  options={[
+                    { label: "Use Developer's Default Workflow", value: "default" },
+                    { label: "Use My Custom N8N Workflow", value: "custom" }
+                  ]}
+                  onChange={(value) => {
+                    if (value === "default") {
+                      setSettings((prev: any) => ({ ...prev, webhookUrl: "" }));
+                    } else {
+                      setSettings((prev: any) => ({ ...prev, webhookUrl: "https://" }));
+                    }
+                  }}
+                  helpText="Select whether to use the built-in AI workflow or your own custom setup"
+                />
+                
+                <TextField
+                  label="Custom N8N Webhook URL"
+                  value={(settings as any).webhookUrl || ""}
+                  onChange={(value) => 
+                    setSettings((prev: any) => ({ ...prev, webhookUrl: value }))
+                  }
+                  placeholder="https://your-n8n-instance.com/webhook/your-workflow"
+                  helpText={(() => {
+                    const url = (settings as any).webhookUrl;
+                    const isValidCustomUrl = url && 
+                                           typeof url === 'string' && 
+                                           url.trim() !== '' && 
+                                           url !== 'https://' &&
+                                           url.startsWith('https://') &&
+                                           url.length > 8;
+                    return isValidCustomUrl ? "Enter your N8N webhook URL. Must be HTTPS." : "Select 'Use My Custom N8N Workflow' above to enable this field.";
+                  })()}
+                  autoComplete="off"
+                  type="url"
+                  disabled={(() => {
+                    const url = (settings as any).webhookUrl;
+                    const isValidCustomUrl = url && 
+                                           typeof url === 'string' && 
+                                           url.trim() !== '' && 
+                                           url !== 'https://' &&
+                                           url.startsWith('https://') &&
+                                           url.length > 8;
+                    return !isValidCustomUrl && (!(settings as any).webhookUrl || (settings as any).webhookUrl === 'https://');
+                  })()}
+                />
+                
+                <Banner tone="info">
+                  <Text variant="bodyMd" as="p">
+                    <strong>Default Workflow:</strong> Uses the developer's pre-configured AI assistant with product recommendations and store context.
+                  </Text>
+                  <Text variant="bodyMd" as="p">
+                    <strong>Custom Workflow:</strong> Forward messages to your own N8N workflow for custom AI processing and responses.
+                  </Text>
+                </Banner>
               </FormLayout>
             </BlockStack>
           </Card>

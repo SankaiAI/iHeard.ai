@@ -139,67 +139,47 @@ This creates a floating chat widget that can be added to any page
     // Show loading
     showLoading(true);
     
-    // Send to AI service - try multiple possible URLs
-    const possibleAppUrls = [
-      // Current tunnel URL from logs
-      'https://lemon-yes-patterns-clerk.trycloudflare.com',
-      // Common CloudFlare tunnel patterns
-      'https://modest-truth-plans-proof.trycloudflare.com',
-      'https://serious-flows-goals-places.trycloudflare.com',
-      'https://busy-signs-visits-gm.trycloudflare.com',
-      'https://new-stones-bless-gm.trycloudflare.com',
-      // Try with current host (useful for local development)
-      window.location.protocol + '//' + window.location.host,
-      // Try with ngrok pattern
-      '{{ shop.permanent_domain | replace: ".myshopify.com", "" | prepend: "https://" | append: ".ngrok.io" }}',
-      // Try localhost patterns with correct development server port
-      'http://localhost:54124',
-      'https://localhost:54124',
-      'http://localhost:52137',
-      'https://localhost:52137'
-    ];
+    // Send to AI service using the app proxy (single endpoint for both settings and chat)
+    const shopUrl = '{{ shop.url }}';
     
-        // Function to try API call with different URLs
-    const tryApiCall = async (urls) => {
-      console.log('🔍 Trying API endpoints:', urls);
-      for (const apiUrl of urls) {
-        console.log(`🚀 Attempting API call to: ${apiUrl}`);
-        try {
-          const response = await fetch(`${apiUrl}/apps/sales-assistant-api`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Shopify-Shop-Domain': '{{ shop.myshopify_domain }}',
-              'X-Shopify-Customer-Access-Token': '{{ customer.access_token | default: "" }}',
-            },
-            body: JSON.stringify({
-              userMessage: message,
-              products: [],
-              context: {
-                page: window.location.pathname,
-                productId: getProductIdFromPage(),
-                conversationHistory: conversationHistory,
-                shopDomain: '{{ shop.myshopify_domain }}'
-              }
-            })
-          });
-          
-          if (response.ok) {
-            console.log(`✅ Success! API call to ${apiUrl} worked`);
-            return await response.json();
-          } else {
-            console.log(`❌ API call to ${apiUrl} failed with status:`, response.status);
-          }
-        } catch (error) {
-          console.log(`❌ Failed to reach API at ${apiUrl}:`, error);
-          continue;
-        }
-      }
-      throw new Error('All API endpoints failed');
-    };
-    
-    // Try the API call
-    tryApiCall(possibleAppUrls)
+    // Function to send message via app proxy
+    const sendChatMessage = async () => {
+      console.log('🚀 Sending chat message via app proxy');
+      try {
+        const response = await fetch(`${shopUrl}/apps/widget-settings`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json',
+             'X-Shopify-Shop-Domain': '{{ shop.myshopify_domain }}',
+             'X-Shopify-Customer-Access-Token': '{{ customer.access_token | default: "" }}',
+           },
+           body: JSON.stringify({
+             userMessage: message,
+             products: [],
+             context: {
+               page: window.location.pathname,
+               productId: getProductIdFromPage(),
+               conversationHistory: conversationHistory,
+               shopDomain: '{{ shop.myshopify_domain }}'
+             }
+           })
+         });
+         
+         if (response.ok) {
+           console.log('✅ Success! Chat message sent via app proxy');
+           return await response.json();
+         } else {
+           console.log(`❌ App proxy request failed with status: ${response.status}`);
+           throw new Error(`Request failed with status ${response.status}`);
+         }
+       } catch (error) {
+         console.log('❌ Failed to send chat message via app proxy:', error);
+         throw error;
+       }
+     };
+     
+     // Send the chat message
+     sendChatMessage()
       .then(data => {
       showLoading(false);
       
@@ -912,7 +892,7 @@ This creates a floating chat widget that can be added to any page
     initializeWidget();
   }
   
-  // Check for setting updates every 2 seconds (faster for development)
+  // Check for setting updates every 5 minutes (reduced from 2 seconds to prevent excessive database queries)
   let workingApiUrl = null; // Cache the working URL to avoid testing all URLs every time
   
   setInterval(async () => {
@@ -944,11 +924,6 @@ This creates a floating chat widget that can be added to any page
               widgetSettings = { ...blockSettings, ...data.settings };
               createWidget();
               console.log('✅ AI Widget: Widget refreshed with new settings');
-            } else if (window.lastSettingsUpdate) {
-              console.log('ℹ️ AI Widget: No settings changes detected', {
-                current: window.lastSettingsUpdate,
-                fetched: currentUpdate
-              });
             }
             window.lastSettingsUpdate = currentUpdate;
             break; // Success, stop trying other URLs
@@ -962,6 +937,6 @@ This creates a floating chat widget that can be added to any page
     } catch (e) {
       // Silently fail
     }
-  }, 2000); // 2 seconds for faster development feedback
+  }, 300000); // 5 minutes (300,000ms) - much more reasonable for production
 })();
 </script> 

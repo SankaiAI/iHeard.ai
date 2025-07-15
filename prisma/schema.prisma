@@ -41,6 +41,7 @@ model WidgetSettings {
   welcomeMessage  String   @default("Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?")
   inputPlaceholder String  @default("Ask me anything about our products...")
   primaryColor    String   @default("#ee5cee")
+  webhookUrl      String?  // Optional - if not set, uses default N8N_WEBHOOK_URL from env
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
