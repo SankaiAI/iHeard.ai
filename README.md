@@ -1,4 +1,6 @@
-<img src="public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png" alt="iHeard.ai Logo" width="300">
+<div align="center">
+  <img src="public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png" alt="iHeard.ai Logo" width="300">
+</div>
 
 # 🤖 iHeard.ai - AI Sales Assistant for Shopify
 
