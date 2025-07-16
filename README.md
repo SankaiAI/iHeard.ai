@@ -1,4 +1,4 @@
-![iHeard.ai Logo](High-Resolution-Color-Logo-Blue-on-Transparent-Background.png)
+![iHeard.ai Logo](public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png)
 
 # 🤖 iHeard.ai - AI Sales Assistant for Shopify
 
