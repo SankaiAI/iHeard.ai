@@ -1,3 +1,5 @@
+![iHeard.ai Logo](High-Resolution-Color-Logo-Blue-on-Transparent-Background.png)
+
 # 🤖 iHeard.ai - AI Sales Assistant for Shopify
 
 An intelligent AI-powered sales assistant widget for Shopify stores that helps customers find products, answer questions, and provide personalized recommendations.
