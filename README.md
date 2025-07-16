@@ -1,4 +1,4 @@
-![iHeard.ai Logo](public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png)
+<img src="public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png" alt="iHeard.ai Logo" width="300">
 
 # 🤖 iHeard.ai - AI Sales Assistant for Shopify
 
