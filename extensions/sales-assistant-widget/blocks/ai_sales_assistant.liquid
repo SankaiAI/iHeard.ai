@@ -526,12 +526,52 @@ This creates a floating chat widget that can be added to any page
   
   // Show/hide loading indicator
   function showLoading(show) {
-    const loadingDiv = document.getElementById('ai-loading');
-    if (loadingDiv) {
-      loadingDiv.style.display = show ? 'block' : 'none';
-      // Auto-scroll when showing loading indicator
-      if (show) {
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    let loadingDiv = document.getElementById('ai-loading');
+    
+    if (show) {
+      // Remove any existing loading indicator first
+      if (loadingDiv) {
+        loadingDiv.remove();
+      }
+      
+      // Create new loading indicator
+      loadingDiv = document.createElement('div');
+      loadingDiv.id = 'ai-loading';
+      loadingDiv.className = 'ai-loading';
+      
+      const loadingDots = document.createElement('div');
+      loadingDots.className = 'loading-dots';
+      
+      // Create the three dots
+      for (let i = 0; i < 3; i++) {
+        const dot = document.createElement('span');
+        loadingDots.appendChild(dot);
+      }
+      
+      loadingDiv.appendChild(loadingDots);
+      
+      // Find the last actual message (excluding welcome message) and insert loading after it
+      if (messagesContainer) {
+        // Get all message elements, excluding the welcome message
+        const allMessages = messagesContainer.querySelectorAll('.ai-message:not(.ai-welcome-message)');
+        
+        if (allMessages.length > 0) {
+          // Insert after the last actual message
+          const lastMessage = allMessages[allMessages.length - 1];
+          lastMessage.insertAdjacentElement('afterend', loadingDiv);
+        } else {
+          // If no actual messages yet, append to container
+          messagesContainer.appendChild(loadingDiv);
+        }
+        
+        // Auto-scroll to show the loading indicator
         scrollToBottom();
+      }
+    } else {
+      // Hide/remove loading indicator
+      if (loadingDiv) {
+        loadingDiv.remove();
       }
     }
   }
@@ -682,7 +722,7 @@ This creates a floating chat widget that can be added to any page
                     <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--ai-primary-color, #ee5cee); border-radius: 12px; margin: 0 auto 12px auto;">
                       <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="28" height="28" style="object-fit: contain;" />
                     </div>
-                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">What do you need help with today?</h3>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">${widgetSettings.welcomeMessage}</h3>
                   </div>
                   
                   <div class="ai-suggestions-container">
@@ -715,12 +755,7 @@ This creates a floating chat widget that can be added to any page
                 </div>
               </div>
               
-              <!-- Loading Indicator -->
-              <div id="ai-loading" class="ai-loading" style="display: none;">
-                <div class="loading-dots">
-                  <span></span><span></span><span></span>
-                </div>
-              </div>
+
             </div>
           </div>
           
@@ -1037,11 +1072,17 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-loading {
-  padding: 10px 15px;
-  text-align: center;
-  margin-bottom: 12px !important; /* Match message spacing */
-  flex-shrink: 0; /* Prevent loading from affecting layout */
-  background: #fafafa; /* Match messages background */
+  padding: 10px 14px;
+  border-radius: 18px;
+  background: #f1f1f1;
+  color: #333;
+  margin-bottom: 16px !important; /* Match message spacing */
+  margin-top: 0 !important;
+  max-width: 85% !important;
+  width: fit-content;
+  align-self: flex-start; /* Left-align like assistant messages */
+  display: block !important;
+  box-sizing: border-box !important;
 }
 
 .loading-dots {
