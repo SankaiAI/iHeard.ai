@@ -132,9 +132,9 @@ This creates a floating chat widget that can be added to any page
         // Wait for CSS transition to start before focusing
         setTimeout(() => inputField.focus(), 200);
       }
-      // Scroll to bottom when chat opens
+      // Ensure scroll starts at the top when chat opens
       setTimeout(() => {
-        scrollToBottom();
+        scrollToTop();
       }, 250);
     }
   };
@@ -152,6 +152,9 @@ This creates a floating chat widget that can be added to any page
     const message = inputField.value.trim();
     
     if (!message) return;
+    
+    // Hide welcome screen after first message
+    hideWelcomeScreen();
     
     // Add user message to chat
     addMessageToChat('user', message);
@@ -292,6 +295,20 @@ This creates a floating chat widget that can be added to any page
     }
   }
   
+  // Smooth scroll to top function
+  function scrollToTop() {
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    if (messagesContainer) {
+      // Use setTimeout to ensure the chat window is fully rendered before scrolling
+      setTimeout(() => {
+        messagesContainer.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 10);
+    }
+  }
+  
   // Display product recommendations
   function displayProductRecommendations(recommendations) {
     const messagesContainer = document.getElementById('ai-chat-messages');
@@ -366,6 +383,15 @@ This creates a floating chat widget that can be added to any page
       if (show) {
         scrollToBottom();
       }
+    }
+  }
+  
+  // Hide welcome screen after first interaction
+  function hideWelcomeScreen() {
+    const welcomeMessage = document.querySelector('.ai-welcome-message');
+    if (welcomeMessage) {
+      welcomeMessage.style.display = 'none';
+      console.log('✅ AI Widget: Welcome screen hidden');
     }
   }
   
@@ -480,9 +506,7 @@ This creates a floating chat widget that can be added to any page
           id="ai-chat-toggle-btn"
           style="background-color: ${widgetSettings.primaryColor};"
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C10.3596 22 8.82344 21.6318 7.46622 20.9823L2.94264 21.9353C2.4292 22.0519 1.94812 21.5708 2.06474 21.0574L3.01767 16.5338C2.36821 15.1766 2 13.6404 2 12C2 6.47715 6.47715 2 12 2ZM12 4C7.58172 4 4 7.58172 4 12C4 13.4542 4.33819 14.8281 4.94219 16.0466L4.04695 19.953L7.95342 19.0578C9.17186 19.6618 10.5458 20 12 20C16.4183 20 20 16.4183 20 12C20 7.58172 16.4183 4 12 4Z" fill="white"/>
-          </svg>
+          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />
           <span class="button-text">${widgetSettings.buttonText}</span>
         </button>
         
@@ -502,9 +526,42 @@ This creates a floating chat widget that can be added to any page
           <div class="ai-chat-messages-container">
             <!-- Chat Messages -->
             <div id="ai-chat-messages" class="ai-chat-messages">
-              <div class="ai-message assistant-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important;">
-                <div class="message-content" style="background-color: #f1f1f1; color: #333; white-space: normal;">
-                  ${widgetSettings.welcomeMessage.trim()}
+              <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
+                <div class="ai-welcome-container" style="background: transparent; padding: 0;">
+                  <div class="ai-welcome-header" style="margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--ai-primary-color, #ee5cee); border-radius: 12px; margin: 0 auto 12px auto;">
+                      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="28" height="28" style="object-fit: contain;" />
+                    </div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">What do you need help with today?</h3>
+                  </div>
+                  
+                  <div class="ai-suggestions-container">
+                    <div class="suggestion-section" style="margin-bottom: 24px;">
+                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Get product recommendations</h4>
+                      <div class="suggestion-buttons">
+                        <button class="suggestion-btn" data-prompt="What are your best-selling products?">Best-selling products</button>
+                        <button class="suggestion-btn" data-prompt="Show me new arrivals">New arrivals</button>
+                        <button class="suggestion-btn" data-prompt="What products are on sale?">Sale items</button>
+                      </div>
+                    </div>
+                    
+                    <div class="suggestion-section" style="margin-bottom: 24px;">
+                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Product information</h4>
+                      <div class="suggestion-buttons">
+                        <button class="suggestion-btn" data-prompt="Tell me about shipping and delivery">Shipping info</button>
+                        <button class="suggestion-btn" data-prompt="What is your return policy?">Return policy</button>
+                        <button class="suggestion-btn" data-prompt="Do you offer customer support?">Customer support</button>
+                      </div>
+                    </div>
+                    
+                    <div class="suggestion-section">
+                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Help me choose</h4>
+                      <div class="suggestion-buttons">
+                        <button class="suggestion-btn" data-prompt="Help me find the perfect product for my needs">Find the right product</button>
+                        <button class="suggestion-btn" data-prompt="Compare similar products">Compare products</button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               
@@ -546,6 +603,10 @@ This creates a floating chat widget that can be added to any page
   // Add CSS styles for the widget
   function addWidgetStyles() {
     if (document.getElementById('ai-widget-styles')) return;
+    
+    // Set CSS variables for dynamic theming
+    document.documentElement.style.setProperty('--ai-primary-color', widgetSettings.primaryColor);
+    document.documentElement.style.setProperty('--ai-primary-color-hover', widgetSettings.primaryColor + 'dd');
     
     const style = document.createElement('style');
     style.id = 'ai-widget-styles';
@@ -591,7 +652,7 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-toggle {
-  background: ${widgetSettings.primaryColor};
+  background: var(--ai-primary-color, #ee5cee);
   border: none;
   border-radius: 50px;
   color: white;
@@ -667,7 +728,7 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-header {
-  background: ${widgetSettings.primaryColor};
+  background: var(--ai-primary-color, #ee5cee);
   color: white;
   padding: 16px;
   display: flex;
@@ -766,6 +827,12 @@ This creates a floating chat widget that can be added to any page
   margin-top: 0 !important; /* Reset any top margins */
 }
 
+/* Welcome screen should take full width */
+.ai-welcome-message {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
 #ai-chat-messages .ai-message:last-child,
 .ai-chat-messages .ai-message:last-child,
 .ai-chat-messages-container .ai-message:last-child {
@@ -836,7 +903,7 @@ This creates a floating chat widget that can be added to any page
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: ${widgetSettings.primaryColor};
+  background: var(--ai-primary-color, #ee5cee);
   animation: loading-bounce 1.4s ease-in-out infinite both;
 }
 
@@ -872,11 +939,11 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input input:focus {
-  border-color: ${widgetSettings.primaryColor};
+  border-color: var(--ai-primary-color, #ee5cee);
 }
 
 .ai-chat-input button {
-  background: ${widgetSettings.primaryColor};
+  background: var(--ai-primary-color, #ee5cee);
   border: none;
   border-radius: 50%;
   width: 40px;
@@ -889,10 +956,59 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input button:hover {
-  background: ${widgetSettings.primaryColor}dd;
+  background: var(--ai-primary-color-hover, #dd44dd);
 }
 
 /* Mobile responsiveness */
+/* AI Welcome Interface Styles */
+.ai-welcome-container {
+  width: 100%;
+  max-width: none !important;
+}
+
+.ai-welcome-header {
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 16px;
+}
+
+.suggestion-section {
+  margin-bottom: 20px;
+}
+
+.suggestion-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.suggestion-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.suggestion-btn:hover {
+  background: #e5e7eb;
+  border-color: var(--ai-primary-color, #ee5cee);
+  color: #111827;
+  transform: translateY(-1px);
+}
+
+.suggestion-btn:active {
+  transform: translateY(0);
+  background: #d1d5db;
+}
+
 @media (max-width: 480px) {
   .ai-chat-window {
     width: calc(100vw - 40px);
@@ -928,6 +1044,11 @@ This creates a floating chat widget that can be added to any page
   
   .ai-chat-input {
     padding: 12px; /* Reduce padding on mobile */
+  }
+  
+  .suggestion-btn {
+    font-size: 13px;
+    padding: 10px 14px;
   }
 }
     `;
@@ -1023,6 +1144,26 @@ This creates a floating chat widget that can be added to any page
     } else {
       console.warn('⚠️ AI Widget: Input field not found');
     }
+    
+    // Add suggestion button event listeners
+    const suggestionBtns = document.querySelectorAll('.suggestion-btn');
+    suggestionBtns.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const prompt = this.getAttribute('data-prompt');
+        if (prompt) {
+          console.log('🖱️ AI Widget: Suggestion clicked:', prompt);
+          // Auto-fill input and send message
+          const inputField = document.getElementById('ai-chat-input-field');
+          if (inputField) {
+            inputField.value = prompt;
+            sendAIMessage();
+          }
+        }
+      });
+    });
+    console.log('✅ AI Widget: Suggestion button listeners added:', suggestionBtns.length);
     
     // Add click outside to close functionality (only add once)
     if (!window.aiWidgetHandlers.outsideClickHandler) {
