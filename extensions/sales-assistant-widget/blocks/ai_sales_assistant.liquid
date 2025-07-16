@@ -309,39 +309,152 @@ This creates a floating chat widget that can be added to any page
     }
   }
   
-  // Display product recommendations
+  // Display enhanced product recommendations
   function displayProductRecommendations(recommendations) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     
-    recommendations.forEach(product => {
-      const productDiv = document.createElement('div');
-      productDiv.className = 'ai-message assistant-message product-recommendation';
+    // Add a container for all product cards
+    const productsContainer = document.createElement('div');
+    productsContainer.className = 'ai-message assistant-message products-grid-container';
+    productsContainer.style.marginBottom = '16px';
+    productsContainer.style.maxWidth = '100%';
+    productsContainer.style.width = '100%';
+    
+    const gridContent = document.createElement('div');
+    gridContent.className = 'products-grid';
+    gridContent.style.display = 'grid';
+    gridContent.style.gridTemplateColumns = recommendations.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(280px, 1fr))';
+    gridContent.style.gap = '12px';
+    gridContent.style.padding = '0';
+    gridContent.style.width = '100%';
+    
+    recommendations.forEach((product, index) => {
+      // Create individual product card
+      const productCard = document.createElement('div');
+      productCard.className = 'product-card clickable-product';
+      productCard.style.backgroundColor = '#fff';
+      productCard.style.border = '1px solid #e5e7eb';
+      productCard.style.borderRadius = '12px';
+      productCard.style.overflow = 'hidden';
+      productCard.style.cursor = 'pointer';
+      productCard.style.transition = 'all 0.3s ease';
+      productCard.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+      productCard.style.position = 'relative';
       
-      // Create clickable product card
-      const productContent = document.createElement('div');
-      productContent.className = 'message-content product-content clickable-product';
-      productContent.style.backgroundColor = '#f8f9fa';
-      productContent.style.color = '#333';
-      productContent.style.border = '1px solid #e9ecef';
-      productContent.style.borderRadius = '12px';
-      productContent.style.padding = '12px';
-      productContent.style.maxWidth = '280px';
-      productContent.style.cursor = 'pointer';
-      productContent.style.transition = 'all 0.2s ease';
+      // Product image (if available)
+      let imageSection = '';
+      if (product.image) {
+        imageSection = `
+          <div class="product-image" style="
+            width: 100%; 
+            height: 160px; 
+            background-image: url('${product.image}'); 
+            background-size: cover; 
+            background-position: center;
+            background-color: #f8f9fa;
+            position: relative;
+          ">
+            <div style="
+              position: absolute;
+              top: 8px;
+              right: 8px;
+              background: ${widgetSettings.primaryColor};
+              color: white;
+              padding: 4px 8px;
+              border-radius: 12px;
+              font-size: 11px;
+              font-weight: 600;
+            ">${product.relevanceScore || 85}% match</div>
+          </div>
+        `;
+      }
       
-      productContent.innerHTML = `
-        <div style="font-weight: 600; margin-bottom: 8px; color: #495057;">${product.title}</div>
-                    <div style="font-size: 18px; font-weight: 700; color: ${widgetSettings.primaryColor}; margin-bottom: 8px;">$${product.price}</div>
-        <div style="font-size: 13px; color: #6c757d; margin-bottom: 10px;">${product.description}</div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 11px; color: #28a745;">Relevance: ${product.relevanceScore}%</div>
-                      <div style="font-size: 11px; color: ${widgetSettings.primaryColor}; font-weight: 600;">Click to view →</div>
+      // Product details
+      const productDetails = `
+        <div style="padding: 16px;">
+          <!-- Product Title -->
+          <h4 style="
+            margin: 0 0 8px 0; 
+            font-size: 16px; 
+            font-weight: 600; 
+            color: #1f2937;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          ">${product.title}</h4>
+          
+          <!-- Price and Category -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-size: 20px; font-weight: 700; color: ${widgetSettings.primaryColor};">
+              $${parseFloat(product.price || '0').toFixed(2)}
+            </div>
+            ${product.category ? `<div style="
+              background: #f3f4f6; 
+              color: #6b7280; 
+              padding: 2px 8px; 
+              border-radius: 8px; 
+              font-size: 11px; 
+              font-weight: 500;
+            ">${product.category}</div>` : ''}
+          </div>
+          
+          <!-- Description -->
+          <p style="
+            margin: 0 0 12px 0; 
+            font-size: 13px; 
+            color: #6b7280; 
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          ">${product.description || 'No description available'}</p>
+          
+          <!-- Tags (if available) -->
+          ${product.tags && product.tags.length > 0 ? `
+            <div style="margin-bottom: 12px;">
+              ${product.tags.slice(0, 3).map(tag => `
+                <span style="
+                  display: inline-block;
+                  background: #e5e7eb;
+                  color: #374151;
+                  padding: 2px 6px;
+                  border-radius: 6px;
+                  font-size: 10px;
+                  margin-right: 4px;
+                  margin-bottom: 4px;
+                ">${tag}</span>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <!-- Action Button -->
+          <div style="
+            background: ${widgetSettings.primaryColor};
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: auto;
+          ">
+            View Product →
+          </div>
         </div>
       `;
       
+      productCard.innerHTML = imageSection + productDetails;
+      
       // Add click handler to open product page
-      productContent.addEventListener('click', function() {
-        const productUrl = `/products/${product.handle}`;
+      productCard.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Use full URL if available, otherwise construct relative URL
+        const productUrl = product.fullUrl || `/products/${product.handle}`;
         window.open(productUrl, '_blank');
         
         // Add visual feedback
@@ -352,23 +465,60 @@ This creates a floating chat widget that can be added to any page
       });
       
       // Add hover effects
-      productContent.addEventListener('mouseenter', function() {
-        this.style.backgroundColor = '#e9ecef';
-        this.style.borderColor = '${widgetSettings.primaryColor}';
-        this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 4px 12px rgba(238, 92, 238, 0.15)';
+      productCard.addEventListener('mouseenter', function() {
+        this.style.borderColor = widgetSettings.primaryColor;
+        this.style.transform = 'translateY(-4px)';
+        this.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
       });
       
-      productContent.addEventListener('mouseleave', function() {
-        this.style.backgroundColor = '#f8f9fa';
-        this.style.borderColor = '#e9ecef';
+      productCard.addEventListener('mouseleave', function() {
+        this.style.borderColor = '#e5e7eb';
         this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+        this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
       });
       
-      productDiv.appendChild(productContent);
-      messagesContainer.appendChild(productDiv);
+      gridContent.appendChild(productCard);
     });
+    
+    productsContainer.appendChild(gridContent);
+    messagesContainer.appendChild(productsContainer);
+    
+    // Add a "Browse More Products" button if there are multiple recommendations
+    if (recommendations.length > 2) {
+      const browseMoreDiv = document.createElement('div');
+      browseMoreDiv.className = 'ai-message assistant-message';
+      browseMoreDiv.style.marginTop = '8px';
+      browseMoreDiv.style.textAlign = 'center';
+      
+      const browseButton = document.createElement('button');
+      browseButton.style.background = 'transparent';
+      browseButton.style.border = `2px solid ${widgetSettings.primaryColor}`;
+      browseButton.style.color = widgetSettings.primaryColor;
+      browseButton.style.padding = '10px 20px';
+      browseButton.style.borderRadius = '25px';
+      browseButton.style.fontSize = '14px';
+      browseButton.style.fontWeight = '600';
+      browseButton.style.cursor = 'pointer';
+      browseButton.style.transition = 'all 0.2s ease';
+      browseButton.textContent = 'Browse All Products';
+      
+      browseButton.addEventListener('click', function() {
+        window.open('/collections/all', '_blank');
+      });
+      
+      browseButton.addEventListener('mouseenter', function() {
+        this.style.backgroundColor = widgetSettings.primaryColor;
+        this.style.color = 'white';
+      });
+      
+      browseButton.addEventListener('mouseleave', function() {
+        this.style.backgroundColor = 'transparent';
+        this.style.color = widgetSettings.primaryColor;
+      });
+      
+      browseMoreDiv.appendChild(browseButton);
+      messagesContainer.appendChild(browseMoreDiv);
+    }
     
     // Scroll to bottom after adding recommendations
     scrollToBottom();
@@ -960,6 +1110,141 @@ This creates a floating chat widget that can be added to any page
 }
 
 /* Mobile responsiveness */
+/* Product Grid Styles */
+.products-grid-container {
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.products-grid {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+}
+
+.product-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.product-image {
+  width: 100%;
+  height: 160px;
+  background-size: cover;
+  background-position: center;
+  background-color: #f8f9fa;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.product-details {
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-price-category {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.product-price {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ai-primary-color, #ee5cee);
+}
+
+.product-category {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.product-description {
+  margin: 0 0 12px 0;
+  font-size: 13px;
+  color: #6b7280;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  flex-grow: 1;
+}
+
+.product-tags {
+  margin-bottom: 12px;
+}
+
+.product-tag {
+  display: inline-block;
+  background: #e5e7eb;
+  color: #374151;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  margin-right: 4px;
+  margin-bottom: 4px;
+}
+
+.product-action-button {
+  background: var(--ai-primary-color, #ee5cee);
+  color: white;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: auto;
+  transition: background-color 0.2s ease;
+}
+
+.product-action-button:hover {
+  background: var(--ai-primary-color-hover, #dd44dd);
+}
+
+.relevance-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--ai-primary-color, #ee5cee);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* AI Welcome Interface Styles */
 .ai-welcome-container {
   width: 100%;
@@ -1049,6 +1334,87 @@ This creates a floating chat widget that can be added to any page
   .suggestion-btn {
     font-size: 13px;
     padding: 10px 14px;
+  }
+  
+  /* Mobile Product Grid Styles */
+  .products-grid {
+    grid-template-columns: 1fr !important; /* Single column on mobile */
+    gap: 10px;
+  }
+  
+  .product-card {
+    flex-direction: row; /* Horizontal layout on mobile */
+    height: auto;
+    min-height: 120px;
+  }
+  
+  .product-image {
+    width: 100px;
+    height: 120px;
+    flex-shrink: 0;
+  }
+  
+  .product-details {
+    padding: 12px;
+    flex-grow: 1;
+  }
+  
+  .product-title {
+    font-size: 14px;
+    -webkit-line-clamp: 1;
+    margin-bottom: 6px;
+  }
+  
+  .product-price {
+    font-size: 16px;
+  }
+  
+  .product-description {
+    font-size: 12px;
+    -webkit-line-clamp: 2;
+    margin-bottom: 8px;
+  }
+  
+  .product-action-button {
+    padding: 8px;
+    font-size: 12px;
+  }
+  
+  .relevance-badge {
+    top: 4px;
+    right: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+  }
+  
+  .product-category {
+    font-size: 10px;
+    padding: 1px 6px;
+  }
+  
+  .product-tag {
+    font-size: 9px;
+    padding: 1px 4px;
+  }
+}
+
+/* Tablet responsiveness */
+@media (max-width: 768px) and (min-width: 481px) {
+  .products-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 10px;
+  }
+  
+  .product-image {
+    height: 140px;
+  }
+  
+  .product-title {
+    font-size: 15px;
+  }
+  
+  .product-price {
+    font-size: 18px;
   }
 }
     `;
