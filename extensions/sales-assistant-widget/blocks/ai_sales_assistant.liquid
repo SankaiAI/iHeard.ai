@@ -105,16 +105,37 @@ This creates a floating chat widget that can be added to any page
   
   // Toggle chat window
   window.toggleAIChat = function() {
+    console.log('🔄 AI Widget: toggleAIChat called, current state:', chatOpen);
     const chatWindow = document.getElementById('ai-chat-window');
+    
+    if (!chatWindow) {
+      console.error('❌ AI Widget: Chat window not found!');
+      return;
+    }
+    
     chatOpen = !chatOpen;
-    chatWindow.style.display = chatOpen ? 'block' : 'none';
+    
+    // Use CSS classes for better control and smoother animations
+    if (chatOpen) {
+      chatWindow.classList.add('ai-chat-open');
+    } else {
+      chatWindow.classList.remove('ai-chat-open');
+    }
+    
+    console.log('✅ AI Widget: Chat window toggled to:', chatOpen ? 'open' : 'closed');
+    console.log('🔍 AI Widget: Chat window classes:', chatWindow.className);
+    console.log('🔍 AI Widget: Chat window computed display:', window.getComputedStyle(chatWindow).display);
     
     if (chatOpen) {
-      document.getElementById('ai-chat-input-field').focus();
+      const inputField = document.getElementById('ai-chat-input-field');
+      if (inputField) {
+        // Wait for CSS transition to start before focusing
+        setTimeout(() => inputField.focus(), 200);
+      }
       // Scroll to bottom when chat opens
       setTimeout(() => {
         scrollToBottom();
-      }, 100);
+      }, 250);
     }
   };
   
@@ -221,6 +242,11 @@ This creates a floating chat widget that can be added to any page
     const messagesContainer = document.getElementById('ai-chat-messages');
     const messageDiv = document.createElement('div');
     messageDiv.className = `ai-message ${sender}-message`;
+    
+    // Force spacing with inline styles to override any CSS
+    messageDiv.style.marginBottom = '0px';
+    messageDiv.style.marginTop = '0px';
+    messageDiv.style.display = 'block';
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
@@ -450,7 +476,7 @@ This creates a floating chat widget that can be added to any page
         <!-- Chat Toggle Button -->
         <button 
           class="ai-chat-toggle" 
-          onclick="toggleAIChat()"
+          id="ai-chat-toggle-btn"
           style="background-color: ${widgetSettings.primaryColor};"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -464,7 +490,7 @@ This creates a floating chat widget that can be added to any page
           <!-- Chat Header -->
           <div class="ai-chat-header" style="background-color: ${widgetSettings.primaryColor};">
             <h3>${widgetSettings.chatTitle}</h3>
-            <button class="ai-chat-close" onclick="toggleAIChat()">
+            <button class="ai-chat-close" id="ai-chat-close-btn">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M13.5 4.5L4.5 13.5M4.5 4.5L13.5 13.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -475,7 +501,7 @@ This creates a floating chat widget that can be added to any page
           <div class="ai-chat-messages-container">
             <!-- Chat Messages -->
             <div id="ai-chat-messages" class="ai-chat-messages">
-              <div class="ai-message assistant-message">
+              <div class="ai-message assistant-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important;">
                 <div class="message-content" style="background-color: #f1f1f1; color: #333;">
                   ${widgetSettings.welcomeMessage}
                 </div>
@@ -496,9 +522,8 @@ This creates a floating chat widget that can be added to any page
               type="text" 
               id="ai-chat-input-field"
               placeholder="${widgetSettings.inputPlaceholder}"
-              onkeypress="handleChatKeyPress(event)"
             />
-            <button onclick="sendAIMessage()" style="background-color: ${widgetSettings.primaryColor};">
+            <button id="ai-chat-send-btn" style="background-color: ${widgetSettings.primaryColor};">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -510,6 +535,11 @@ This creates a floating chat widget that can be added to any page
     
     // Add CSS styles
     addWidgetStyles();
+    
+    // Add event listeners after DOM is ready
+    setTimeout(() => {
+      setupEventListeners();
+    }, 50);
   }
   
   // Add CSS styles for the widget
@@ -593,15 +623,26 @@ This creates a floating chat widget that can be added to any page
   background: white;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  display: grid !important;
-  grid-template-rows: 60px 1fr 70px !important;
+  display: none;
+  grid-template-rows: 60px 1fr 70px;
   grid-template-areas: 
     "header"
     "messages"
-    "input" !important;
+    "input";
   overflow: hidden;
-  max-height: 500px !important; /* Ensure fixed height */
-  min-height: 500px !important; /* Prevent shrinking */
+  max-height: 500px;
+  min-height: 500px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.ai-chat-window.ai-chat-open {
+  display: grid !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
@@ -682,7 +723,7 @@ This creates a floating chat widget that can be added to any page
   overflow-x: hidden !important;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0 !important; /* Remove gap to use margin instead for better control */
   scroll-behavior: smooth;
   min-height: 0 !important; /* Important for flex scrolling */
   height: 100% !important; /* Take full available height */
@@ -715,12 +756,28 @@ This creates a floating chat widget that can be added to any page
   scrollbar-color: #bbb #f1f1f1;
 }
 
-.ai-message {
+#ai-chat-messages .ai-message,
+.ai-chat-messages .ai-message,
+.ai-chat-messages-container .ai-message {
   max-width: 85% !important;
   width: fit-content;
   overflow: visible !important; /* Allow content to show fully */
   display: block !important;
   box-sizing: border-box !important;
+  margin-bottom: 16px !important; /* Increased spacing for better visibility */
+  margin-top: 0 !important; /* Reset any top margins */
+}
+
+#ai-chat-messages .ai-message:last-child,
+.ai-chat-messages .ai-message:last-child,
+.ai-chat-messages-container .ai-message:last-child {
+  margin-bottom: 8px !important; /* Small bottom margin for last message */
+}
+
+/* Force spacing with even higher specificity */
+.ai-sales-assistant-widget .ai-chat-messages .ai-message {
+  margin-bottom: 16px !important;
+  margin-top: 0 !important;
 }
 
 .ai-message.user-message {
@@ -732,7 +789,8 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-message.product-recommendation {
-  margin-top: 8px;
+  margin-top: 0 !important; /* Use consistent margin pattern */
+  margin-bottom: 12px !important; /* Consistent with other messages */
 }
 
 .product-content {
@@ -766,10 +824,9 @@ This creates a floating chat widget that can be added to any page
 .ai-loading {
   padding: 10px 15px;
   text-align: center;
-  margin-bottom: 10px; /* Ensure proper spacing */
+  margin-bottom: 12px !important; /* Match message spacing */
   flex-shrink: 0; /* Prevent loading from affecting layout */
   background: #fafafa; /* Match messages background */
-  border-top: 1px solid #e5e5e5;
 }
 
 .loading-dots {
@@ -877,6 +934,113 @@ This creates a floating chat widget that can be added to any page
 }
     `;
     document.head.appendChild(style);
+  }
+  
+  // Setup event listeners for widget buttons
+  function setupEventListeners() {
+    console.log('🔧 AI Widget: Setting up event listeners');
+    
+    // Store references to event handlers so we can remove them if needed
+    window.aiWidgetHandlers = window.aiWidgetHandlers || {};
+    
+    // Toggle button event listener
+    const toggleBtn = document.getElementById('ai-chat-toggle-btn');
+    if (toggleBtn) {
+      // Remove existing listener if any
+      if (window.aiWidgetHandlers.toggleHandler) {
+        toggleBtn.removeEventListener('click', window.aiWidgetHandlers.toggleHandler);
+      }
+      
+      window.aiWidgetHandlers.toggleHandler = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🖱️ AI Widget: Toggle button clicked');
+        toggleAIChat();
+      };
+      
+      toggleBtn.addEventListener('click', window.aiWidgetHandlers.toggleHandler);
+      console.log('✅ AI Widget: Toggle button event listener added');
+    } else {
+      console.warn('⚠️ AI Widget: Toggle button not found');
+    }
+    
+    // Close button event listener
+    const closeBtn = document.getElementById('ai-chat-close-btn');
+    if (closeBtn) {
+      // Remove existing listener if any
+      if (window.aiWidgetHandlers.closeHandler) {
+        closeBtn.removeEventListener('click', window.aiWidgetHandlers.closeHandler);
+      }
+      
+      window.aiWidgetHandlers.closeHandler = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🖱️ AI Widget: Close button clicked');
+        toggleAIChat();
+      };
+      
+      closeBtn.addEventListener('click', window.aiWidgetHandlers.closeHandler);
+      console.log('✅ AI Widget: Close button event listener added');
+    } else {
+      console.warn('⚠️ AI Widget: Close button not found');
+    }
+    
+    // Send button event listener
+    const sendBtn = document.getElementById('ai-chat-send-btn');
+    if (sendBtn) {
+      // Remove existing listener if any
+      if (window.aiWidgetHandlers.sendHandler) {
+        sendBtn.removeEventListener('click', window.aiWidgetHandlers.sendHandler);
+      }
+      
+      window.aiWidgetHandlers.sendHandler = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        sendAIMessage();
+      };
+      
+      sendBtn.addEventListener('click', window.aiWidgetHandlers.sendHandler);
+      console.log('✅ AI Widget: Send button event listener added');
+    } else {
+      console.warn('⚠️ AI Widget: Send button not found');
+    }
+    
+    // Input field event listener for Enter key
+    const inputField = document.getElementById('ai-chat-input-field');
+    if (inputField) {
+      // Remove existing listener if any
+      if (window.aiWidgetHandlers.keyHandler) {
+        inputField.removeEventListener('keypress', window.aiWidgetHandlers.keyHandler);
+      }
+      
+      window.aiWidgetHandlers.keyHandler = function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendAIMessage();
+        }
+      };
+      
+      inputField.addEventListener('keypress', window.aiWidgetHandlers.keyHandler);
+      console.log('✅ AI Widget: Input field event listener added');
+    } else {
+      console.warn('⚠️ AI Widget: Input field not found');
+    }
+    
+    // Add click outside to close functionality (only add once)
+    if (!window.aiWidgetHandlers.outsideClickHandler) {
+      window.aiWidgetHandlers.outsideClickHandler = function(e) {
+        const chatWindow = document.getElementById('ai-chat-window');
+        const widget = document.querySelector('.ai-sales-assistant-widget');
+        
+        if (chatOpen && chatWindow && widget && !widget.contains(e.target)) {
+          console.log('🖱️ AI Widget: Clicked outside, closing chat');
+          toggleAIChat();
+        }
+      };
+      
+      document.addEventListener('click', window.aiWidgetHandlers.outsideClickHandler);
+      console.log('✅ AI Widget: Outside click listener added');
+    }
   }
   
   // Add manual refresh function for debugging
