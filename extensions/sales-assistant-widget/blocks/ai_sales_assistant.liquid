@@ -251,14 +251,15 @@ This creates a floating chat widget that can be added to any page
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
     
-    // Don't truncate messages - let them wrap properly instead
-    messageContent.innerHTML = message.replace(/\n/g, '<br>'); // Handle line breaks properly
+    // Trim whitespace and handle line breaks properly
+    const cleanMessage = message.trim().replace(/\n/g, '<br>');
+    messageContent.innerHTML = cleanMessage;
     
     // Apply proper styling for text wrapping
     messageContent.style.wordWrap = 'break-word';
     messageContent.style.wordBreak = 'break-word';
     messageContent.style.overflowWrap = 'break-word';
-    messageContent.style.whiteSpace = 'pre-wrap';
+    messageContent.style.whiteSpace = 'normal'; // Normal whitespace handling
     messageContent.style.maxWidth = '100%';
     messageContent.style.boxSizing = 'border-box';
     
@@ -502,16 +503,16 @@ This creates a floating chat widget that can be added to any page
             <!-- Chat Messages -->
             <div id="ai-chat-messages" class="ai-chat-messages">
               <div class="ai-message assistant-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important;">
-                <div class="message-content" style="background-color: #f1f1f1; color: #333;">
-                  ${widgetSettings.welcomeMessage}
+                <div class="message-content" style="background-color: #f1f1f1; color: #333; white-space: normal;">
+                  ${widgetSettings.welcomeMessage.trim()}
                 </div>
               </div>
-            </div>
-            
-            <!-- Loading Indicator -->
-            <div id="ai-loading" class="ai-loading" style="display: none;">
-              <div class="loading-dots">
-                <span></span><span></span><span></span>
+              
+              <!-- Loading Indicator -->
+              <div id="ai-loading" class="ai-loading" style="display: none;">
+                <div class="loading-dots">
+                  <span></span><span></span><span></span>
+                </div>
               </div>
             </div>
           </div>
@@ -706,26 +707,23 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-messages-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  grid-area: messages !important;
   overflow: hidden;
   background: #fafafa;
   box-sizing: border-box;
-  grid-area: messages !important;
+  height: 100%;
+  width: 100%;
 }
 
 .ai-chat-messages {
-  flex: 1;
   padding: 15px;
-  padding-bottom: 25px; /* Extra padding at bottom */
-  overflow-y: auto !important; /* Show scrollbar only when content overflows */
+  padding-bottom: 15px; /* Consistent padding */
+  overflow-y: auto !important; /* Show scrollbar when content overflows */
   overflow-x: hidden !important;
   display: flex;
   flex-direction: column;
   gap: 0 !important; /* Remove gap to use margin instead for better control */
   scroll-behavior: smooth;
-  min-height: 0 !important; /* Important for flex scrolling */
   height: 100% !important; /* Take full available height */
   box-sizing: border-box !important;
   background: #fafafa; /* Light background to distinguish from header/footer */
@@ -816,7 +814,7 @@ This creates a floating chat widget that can be added to any page
   overflow-wrap: break-word !important;
   hyphens: auto;
   max-width: 100% !important;
-  white-space: pre-wrap !important; /* Preserve line breaks and wrap text */
+  white-space: normal !important; /* Normal whitespace handling - trim extra spaces */
   box-sizing: border-box !important;
   overflow: visible !important; /* Allow content to show fully */
 }
