@@ -287,11 +287,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ for the Shopify ecosystem**
-
-## Voice Integration Status
-
-- Voice API integration: In Progress
-- Frontend voice UI: Not started
-- Admin panel voice settings: Not started
-
-See `PROJECT_PROGRESS.md` for detailed status.
