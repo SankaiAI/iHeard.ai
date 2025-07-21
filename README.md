@@ -1,8 +1,11 @@
 <div align="center">
   <img src="public/High-Resolution-Color-Logo-Blue-on-Transparent-Background.png" alt="iHeard.ai Logo" width="300">
 </div>
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 7b57fc5c2605515c9626e386c976e55721570879
 # 🤖 iHeard.ai - AI Sales Assistant for Shopify
 
 An intelligent AI-powered sales assistant widget for Shopify stores that helps customers find products, answer questions, and provide personalized recommendations.
