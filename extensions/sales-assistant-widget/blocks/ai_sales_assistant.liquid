@@ -1337,12 +1337,15 @@ This creates a floating chat widget that can be added to any page
 
 @media (max-width: 480px) {
   .ai-chat-window {
-    width: calc(100vw - 40px);
-    height: calc(100vh - 140px);
-    position: fixed;
-    bottom: 70px;
-    left: 20px;
-    right: 20px;
+    width: 100vw !important;
+    height: 100vh !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    border-radius: 0 !important;
+    z-index: 99999 !important;
   }
   
   .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
@@ -1351,9 +1354,14 @@ This creates a floating chat widget that can be added to any page
   .ai-sales-assistant-widget.position-bottom-right .ai-chat-window,
   .ai-sales-assistant-widget.position-top-right .ai-chat-window,
   .ai-sales-assistant-widget.position-center-right .ai-chat-window {
-    left: 20px;
-    right: 20px;
-    transform: none;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    transform: none !important;
+    border-radius: 0 !important;
   }
   
   .ai-chat-toggle .button-text {
@@ -1369,7 +1377,44 @@ This creates a floating chat widget that can be added to any page
   }
   
   .ai-chat-input {
-    padding: 12px; /* Reduce padding on mobile */
+    padding: 15px !important;
+    border-top: 1px solid #e5e5e5;
+    background: white !important;
+    border-radius: 0 !important; /* No border radius for full screen */
+  }
+  
+  .ai-chat-input input {
+    font-size: 16px !important; /* Prevent zoom on iOS */
+    padding: 12px 15px !important;
+  }
+  
+  .ai-chat-input button {
+    width: 44px !important;
+    height: 44px !important; /* Larger touch target on mobile */
+  }
+  
+  /* Better mobile header */
+  .ai-chat-header {
+    padding: 20px 15px !important;
+    height: auto !important;
+    min-height: 60px !important;
+  }
+  
+  .ai-chat-header h3 {
+    font-size: 18px !important;
+  }
+  
+  .ai-chat-close {
+    width: 44px !important;
+    height: 44px !important; /* Larger touch target */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Better messages container on mobile */
+  .ai-chat-messages {
+    padding: 15px !important;
   }
   
   .suggestion-btn {
@@ -1377,65 +1422,88 @@ This creates a floating chat widget that can be added to any page
     padding: 10px 14px;
   }
   
-  /* Mobile Product Grid Styles */
+  /* Mobile Product Grid Styles - Keep vertical cards but optimize for mobile */
   .products-grid {
     grid-template-columns: 1fr !important; /* Single column on mobile */
-    gap: 10px;
+    gap: 12px;
+    padding: 0 5px; /* Small padding to prevent edge cutoff */
   }
   
   .product-card {
-    flex-direction: row; /* Horizontal layout on mobile */
-    height: auto;
-    min-height: 120px;
+    flex-direction: column !important; /* Keep vertical layout on mobile */
+    height: auto !important;
+    min-height: auto !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .product-image {
-    width: 100px;
-    height: 120px;
+    width: 100% !important;
+    height: 180px !important; /* Slightly larger image on mobile */
     flex-shrink: 0;
   }
   
   .product-details {
-    padding: 12px;
+    padding: 12px !important;
     flex-grow: 1;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
   
   .product-title {
-    font-size: 14px;
-    -webkit-line-clamp: 1;
-    margin-bottom: 6px;
+    font-size: 15px !important;
+    -webkit-line-clamp: 2 !important;
+    margin-bottom: 8px !important;
+    line-height: 1.3 !important;
+  }
+  
+  .product-price-category {
+    margin-bottom: 10px !important;
   }
   
   .product-price {
-    font-size: 16px;
+    font-size: 18px !important;
   }
   
   .product-description {
-    font-size: 12px;
-    -webkit-line-clamp: 2;
-    margin-bottom: 8px;
+    font-size: 13px !important;
+    -webkit-line-clamp: 2 !important;
+    margin-bottom: 10px !important;
+    line-height: 1.4 !important;
   }
   
   .product-action-button {
-    padding: 8px;
-    font-size: 12px;
+    padding: 12px !important;
+    font-size: 14px !important;
+    margin-top: 8px !important;
+    text-align: center !important;
   }
   
   .relevance-badge {
-    top: 4px;
-    right: 4px;
-    padding: 2px 6px;
-    font-size: 10px;
+    top: 8px !important;
+    right: 8px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
   }
   
   .product-category {
-    font-size: 10px;
-    padding: 1px 6px;
+    font-size: 11px !important;
+    padding: 2px 6px !important;
   }
   
   .product-tag {
-    font-size: 9px;
-    padding: 1px 4px;
+    font-size: 10px !important;
+    padding: 2px 5px !important;
+    margin-right: 4px !important;
+    margin-bottom: 4px !important;
+  }
+  
+  /* Ensure all product content is visible on mobile */
+  .products-grid-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
   }
 }
 
