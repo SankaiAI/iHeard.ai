@@ -105,8 +105,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       );
     }
 
-    // Try to get admin access for shop data
-    let admin;
+    // Try to get admin access for shop data (with better error handling)
+    let admin = null;
+    let products = [];
+    
     try {
       const session = await sessionStorage.findSessionsByShop(shopDomain);
       if (session.length > 0) {
@@ -119,9 +121,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         admin = unauthenticatedAdmin;
       }
     } catch (error) {
-      console.log('⚠️ Authentication failed, trying unauthenticated admin:', error);
-      const { admin: unauthenticatedAdmin } = await unauthenticated.admin(shopDomain);
-      admin = unauthenticatedAdmin;
+      console.log('⚠️ Authentication failed, will proceed without products:', error);
+      admin = null;
     }
     
     // Parse the request body
@@ -138,44 +139,57 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     
     console.log('💬 Processing message:', finalMessage);
 
-    // Get products for context
-    const response = await admin.graphql(`
-      #graphql
-      query getProducts($first: Int!) {
-        products(first: $first) {
-          edges {
-            node {
-              id
-              title
-              handle
-              description
-              featuredImage {
-                url
-              }
-              variants(first: 1) {
-                edges {
-                  node {
-                    price
+    // Get products for context (only if admin is available)
+    if (admin) {
+      try {
+        console.log('🛍️ Fetching products from Shopify...');
+        const response = await admin.graphql(`
+          #graphql
+          query getProducts($first: Int!) {
+            products(first: $first) {
+              edges {
+                node {
+                  id
+                  title
+                  handle
+                  description
+                  featuredImage {
+                    url
+                  }
+                  variants(first: 1) {
+                    edges {
+                      node {
+                        price
+                      }
+                    }
                   }
                 }
               }
             }
           }
-        }
-      }
-    `, {
-      variables: { first: 50 }
-    });
+        `, {
+          variables: { first: 50 }
+        });
 
-    const responseData = (response as any).data;
-    const products = responseData?.products?.edges?.map((edge: any) => ({
-      id: edge.node.id,
-      title: edge.node.title,
-      handle: edge.node.handle,
-      description: edge.node.description,
-      image: edge.node.featuredImage?.url,
-      price: edge.node.variants.edges[0]?.node.price || "0.00"
-    })) || [];
+        const responseData = (response as any).data;
+        products = responseData?.products?.edges?.map((edge: any) => ({
+          id: edge.node.id,
+          title: edge.node.title,
+          handle: edge.node.handle,
+          description: edge.node.description,
+          image: edge.node.featuredImage?.url,
+          price: edge.node.variants.edges[0]?.node.price || "0.00"
+        })) || [];
+        
+        console.log(`✅ Fetched ${products.length} products from Shopify`);
+      } catch (error) {
+        console.log('⚠️ Failed to fetch products from Shopify:', error);
+        products = []; // Continue without products
+      }
+    } else {
+      console.log('⚠️ No admin access, proceeding without product data');
+      products = [];
+    }
 
     // Enhanced context for better AI responses
     const enhancedContext = {
