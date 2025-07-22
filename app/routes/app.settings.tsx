@@ -36,6 +36,7 @@ const DEFAULT_SETTINGS = {
   gradientDirection: "to right",
   glassEffect: false,
   widgetStyle: "eye-animation",
+  showButtonText: true,
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -162,6 +163,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     gradientDirection: formData.get("gradientDirection") as string,
     glassEffect: formData.get("glassEffect") === "true",
     widgetStyle: formData.get("widgetStyle") as string,
+    showButtonText: formData.get("showButtonText") === "true",
     // Handle webhookUrl properly - only include if it has a value
     ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
   };
@@ -193,6 +195,18 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  
+  // Determine workflow type based on webhook URL
+  const getWorkflowType = () => {
+    const url = (settings as any).webhookUrl;
+    const isValidCustomUrl = url && 
+                           typeof url === 'string' && 
+                           url.trim() !== '' && 
+                           url !== 'https://' &&
+                           url.startsWith('https://') &&
+                           url.length > 8;
+    return isValidCustomUrl ? "custom" : "default";
+  };
 
   // Show success banner when settings are saved
   useEffect(() => {
@@ -249,7 +263,7 @@ export default function SettingsPage() {
       // Create a glass overlay effect by combining background with transparency
       return {
         ...glassStyle,
-        background: `linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1)), ${baseBackground}`,
+        background: `linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.05)), ${baseBackground}`,
       };
     }
     
@@ -312,6 +326,13 @@ export default function SettingsPage() {
                   }
                   helpText="Text displayed on the chat button"
                   autoComplete="off"
+                />
+
+                <Checkbox
+                  label="Show Button Text"
+                  checked={settings.showButtonText}
+                  onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, showButtonText: checked }))}
+                  helpText="Toggle to show/hide the button text next to the icon"
                 />
 
                 <TextField
@@ -447,7 +468,7 @@ export default function SettingsPage() {
                   <div style={{
                     ...getPreviewCombinedStyle(),
                     color: "white",
-                    padding: "12px 16px",
+                    padding: settings.widgetStyle === "eye-animation" ? "8px 16px" : "12px 16px",
                     borderRadius: "25px",
                     fontSize: "14px",
                     fontWeight: "500",
@@ -456,15 +477,16 @@ export default function SettingsPage() {
                     gap: "8px",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                     opacity: settings.enabled ? 1 : 0.5,
+                    minHeight: settings.widgetStyle === "eye-animation" ? "auto" : "40px",
                   }}>
                     {settings.widgetStyle === "eye-animation" ? (
-                      <img src="/animationeyelogo.svg" alt="AI Eye" width="24" height="24" style={{objectFit: 'contain'}} />
+                      <img src="/animationeyelogo.svg" alt="AI Eye" style={{width: 'auto', height: 'auto', maxWidth: 'none', objectFit: 'contain'}} />
                     ) : (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                       </svg>
                     )}
-                    {settings.buttonText}
+                    {settings.showButtonText && settings.buttonText}
                   </div>
                 </div>
                 
@@ -502,16 +524,7 @@ export default function SettingsPage() {
               <FormLayout>
                 <Select
                   label="Workflow Type"
-                  value={(() => {
-                    const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
-                                           url !== 'https://' &&
-                                           url.startsWith('https://') &&
-                                           url.length > 8;
-                    return isValidCustomUrl ? "custom" : "default";
-                  })()}
+                  value={getWorkflowType()}
                   options={[
                     { label: "Use Developer's Default Workflow", value: "default" },
                     { label: "Use My Custom N8N Workflow", value: "custom" }
@@ -520,6 +533,7 @@ export default function SettingsPage() {
                     if (value === "default") {
                       setSettings((prev: any) => ({ ...prev, webhookUrl: "" }));
                     } else {
+                      // Set to a placeholder that will enable the field but not be considered valid
                       setSettings((prev: any) => ({ ...prev, webhookUrl: "https://" }));
                     }
                   }}
@@ -533,28 +547,10 @@ export default function SettingsPage() {
                     setSettings((prev: any) => ({ ...prev, webhookUrl: value }))
                   }
                   placeholder="https://your-n8n-instance.com/webhook/your-workflow"
-                  helpText={(() => {
-                    const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
-                                           url !== 'https://' &&
-                                           url.startsWith('https://') &&
-                                           url.length > 8;
-                    return isValidCustomUrl ? "Enter your N8N webhook URL. Must be HTTPS." : "Select 'Use My Custom N8N Workflow' above to enable this field.";
-                  })()}
+                  helpText={getWorkflowType() === "custom" ? "Enter your N8N webhook URL. Must be HTTPS." : "Select 'Use My Custom N8N Workflow' above to enable this field."}
                   autoComplete="off"
                   type="url"
-                  disabled={(() => {
-                    const url = (settings as any).webhookUrl;
-                    const isValidCustomUrl = url && 
-                                           typeof url === 'string' && 
-                                           url.trim() !== '' && 
-                                           url !== 'https://' &&
-                                           url.startsWith('https://') &&
-                                           url.length > 8;
-                    return !isValidCustomUrl && (!(settings as any).webhookUrl || (settings as any).webhookUrl === 'https://');
-                  })()}
+                  disabled={getWorkflowType() === "default"}
                 />
                 
                 <Banner tone="info">

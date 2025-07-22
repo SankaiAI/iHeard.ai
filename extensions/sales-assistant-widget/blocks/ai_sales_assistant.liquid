@@ -121,6 +121,13 @@ This creates a floating chat widget that can be added to any page
         { "value": "simple", "label": "Simple Chat Icon" }
       ],
       "default": "eye-animation"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_button_text",
+      "label": "Show Button Text",
+      "default": true,
+      "info": "Toggle to show/hide the button text next to the icon"
     }
   ]
 }
@@ -151,7 +158,8 @@ This creates a floating chat widget that can be added to any page
     gradientColor2: {{ block.settings.gradient_color_2 | json }},
     gradientDirection: {{ block.settings.gradient_direction | json }},
     glassEffect: {{ block.settings.glass_effect | json }},
-    widgetStyle: {{ block.settings.widget_style | json }}
+    widgetStyle: {{ block.settings.widget_style | json }},
+    showButtonText: {{ block.settings.show_button_text | json }}
   };
   
   // Toggle chat window
@@ -773,7 +781,7 @@ This creates a floating chat widget that can be added to any page
       
       if (widgetSettings.glassEffect) {
         // Create glass effect by overlaying transparent white on the base background
-        style = `background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1)), ${baseBackground}; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);`;
+        style = `background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0.05)), ${baseBackground}; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);`;
       }
       
       return style;
@@ -791,7 +799,7 @@ This creates a floating chat widget that can be added to any page
             '<img src="{{ "animationeyelogo.svg" | asset_url }}" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />' :
             '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>'
           }
-          <span class="button-text">${widgetSettings.buttonText}</span>
+          ${widgetSettings.showButtonText ? `<span class="button-text">${widgetSettings.buttonText}</span>` : ''}
         </button>
         
         <!-- Chat Window -->

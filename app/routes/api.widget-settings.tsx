@@ -19,6 +19,7 @@ const DEFAULT_SETTINGS = {
   gradientDirection: "to right",
   glassEffect: false,
   widgetStyle: "eye-animation",
+  showButtonText: true,
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

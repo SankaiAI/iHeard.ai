@@ -47,6 +47,7 @@ model WidgetSettings {
   gradientDirection String? @default("to right")
   glassEffect     Boolean  @default(false)
   widgetStyle     String   @default("eye-animation") // "eye-animation" or "simple"
+  showButtonText  Boolean  @default(true) // Whether to show button text or just icon
   webhookUrl      String?  // Optional - if not set, uses default N8N_WEBHOOK_URL from env
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
