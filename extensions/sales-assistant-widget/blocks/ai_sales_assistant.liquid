@@ -83,6 +83,7 @@ This creates a floating chat widget that can be added to any page
 {% endschema %}
 
 <!-- AI Sales Assistant Widget will be dynamically loaded -->
+<div id="ai-sales-assistant-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; z-index:99998; background:rgba(0,0,0,0); touch-action:none;"></div>
 <div id="ai-sales-assistant-container"></div>
 
 <script>
@@ -105,26 +106,23 @@ This creates a floating chat widget that can be added to any page
   
   // Toggle chat window
   window.toggleAIChat = function() {
-    console.log('🔄 AI Widget: toggleAIChat called, current state:', chatOpen);
+    console.log('[AI Widget] toggleAIChat called, current state:', chatOpen);
     const chatWindow = document.getElementById('ai-chat-window');
-    
     if (!chatWindow) {
-      console.error('❌ AI Widget: Chat window not found!');
+      console.error('[AI Widget] Chat window not found!');
       return;
     }
-    
     chatOpen = !chatOpen;
-    
-    // Use CSS classes for better control and smoother animations
     if (chatOpen) {
       chatWindow.classList.add('ai-chat-open');
+      chatWindow.style.display = 'grid'; // Ensure visible when open
     } else {
       chatWindow.classList.remove('ai-chat-open');
+      chatWindow.style.display = 'none'; // Ensure hidden when closed
     }
-    
-    console.log('✅ AI Widget: Chat window toggled to:', chatOpen ? 'open' : 'closed');
-    console.log('🔍 AI Widget: Chat window classes:', chatWindow.className);
-    console.log('🔍 AI Widget: Chat window computed display:', window.getComputedStyle(chatWindow).display);
+    console.log('[AI Widget] Chat window toggled to:', chatOpen ? 'open' : 'closed');
+    console.log('[AI Widget] Chat window classes:', chatWindow.className);
+    console.log('[AI Widget] Chat window computed display:', window.getComputedStyle(chatWindow).display);
     
     if (chatOpen) {
       const inputField = document.getElementById('ai-chat-input-field');
@@ -250,6 +248,10 @@ This creates a floating chat widget that can be added to any page
     messageDiv.style.marginBottom = '0px';
     messageDiv.style.marginTop = '0px';
     messageDiv.style.display = 'block';
+    // Remove margin-top for the first user message after welcome
+    if (sender === 'user' && messagesContainer && messagesContainer.querySelectorAll('.ai-message.user-message').length === 0) {
+      messageDiv.style.marginTop = '0px';
+    }
     
     const messageContent = document.createElement('div');
     messageContent.className = 'message-content';
@@ -275,10 +277,18 @@ This creates a floating chat widget that can be added to any page
     }
     
     messageDiv.appendChild(messageContent);
+    // Remove welcome message if present BEFORE adding .has-messages
+    const welcome = messagesContainer.querySelector('.ai-welcome-message');
+    if (welcome) {
+      welcome.style.marginBottom = '0px'; // Remove any bottom margin before removing
+      welcome.remove();
+    }
     messagesContainer.appendChild(messageDiv);
-    
+    // Add has-messages class for flex alignment
+    messagesContainer.classList.add('has-messages');
     // Scroll to bottom with smooth animation
     scrollToBottom();
+    setTimeout(observeImagesForScroll, 100);
   }
   
   // Smooth scroll to bottom function
@@ -521,7 +531,8 @@ This creates a floating chat widget that can be added to any page
     }
     
     // Scroll to bottom after adding recommendations
-    scrollToBottom();
+    setTimeout(scrollToBottom, 100);
+    setTimeout(observeImagesForScroll, 200);
   }
   
   // Show/hide loading indicator
@@ -582,6 +593,10 @@ This creates a floating chat widget that can be added to any page
     if (welcomeMessage) {
       welcomeMessage.style.display = 'none';
       console.log('✅ AI Widget: Welcome screen hidden');
+    }
+    const messagesContainer = document.getElementById('ai-chat-messages');
+    if (messagesContainer) {
+      messagesContainer.classList.remove('welcome-active');
     }
   }
   
@@ -696,7 +711,7 @@ This creates a floating chat widget that can be added to any page
           id="ai-chat-toggle-btn"
           style="background-color: ${widgetSettings.primaryColor};"
         >
-          <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />
+          <img src="{{ 'animationeyelogo.svg' | asset_url }}" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />
           <span class="button-text">${widgetSettings.buttonText}</span>
         </button>
         
@@ -719,39 +734,9 @@ This creates a floating chat widget that can be added to any page
               <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
                 <div class="ai-welcome-container" style="background: transparent; padding: 0;">
                   <div class="ai-welcome-header" style="margin-bottom: 20px;">
-                    <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: var(--ai-primary-color, #ee5cee); border-radius: 12px; margin: 0 auto 12px auto;">
-                      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAABJlBMVEVHcEwb49o9s+I0v+BIoOUuyN9Ui+hZg+pdfOsc49tMl+ZViuke4NtOk+ce39sc4ts3t+Ej19xbf+pTi+gl1N1GoOVCp+RWh+kxwuAa5tpFo+Ue39s0vuAsyt4i2NxIneYpzd5Ml+Yry946suJUiuldfOs6suIc49oZ59oa5do/q+Neeusxwt8Y6dka5touxt88sOJcfupZgupcfuo0veBefOpcfuoZ5toiIiI8sOI2ueFCp+RFouVInuU5tOE/q+MzveAxwt8uxt9LmedQkOdWh+kry98o0N0hHx9Ui+gl1Nwi2dwf3dtOlOZZgulcfuomTFYsRFcrhZc+ZpxUjes4cJsyepkjP0Ei2t0lxs1ImOBPluomy9ZEcbFBo95KgMsmmaIkZ2ysswjsAAAAOHRSTlMA/gUPAic0C7FTd1yYJhPx7WN0zOqTseDK3t/QnT6GGbzjS7idmjlKO63ujvUwzvf08Ty8eiXh80ZVzqoAAAFYSURBVDjLvZPXVsJAEIYpgST0DlIEFAQLFiw0KUGECKJIVECxvf9LaHZmMBG88/hdzX/mO7t7dnYNhv/FVciJYt5iWt015R37bqPRWFrb9rpW9AsOtQuUYuLSKrnYtRb3ulnfFwMDxnQ6hWLg0BmJQJ/Rm81mcyj765zm9Kke8D6ZTD7mUAc2vgVvF+iNZVketTGlFpuYI22gOy6X5ZGE6WCxRGJPAtpMaGGS4iSctBCJCVWKEdyDi1cJJjQoeSx4x5sNpPqoChWKni0SKgQTmpQOUeBCTYQJdzWKO7iFIVgjHlThlVI0iYL9nGBCnVKIRuqM1hEmPFGy0T1wwQsEBAxp52IW1vSQ8ayoQgfC0KYZt60DvCmK8oK1P6kR+MwVcP8FVGGr7kWZM5d6/MUfb5L3hW80CM7lZ23Nnt0CR8d2ftXH4E7tu4IgZH1F/ve/xZlMf/5fPwFR8XwfQCSWdQAAAABJRU5ErkJggg==" alt="iHeard.ai" width="28" height="28" style="object-fit: contain;" />
-                    </div>
                     <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">${widgetSettings.welcomeMessage}</h3>
                   </div>
-                  
-                  <div class="ai-suggestions-container">
-                    <div class="suggestion-section" style="margin-bottom: 24px;">
-                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Get product recommendations</h4>
-                      <div class="suggestion-buttons">
-                        <button class="suggestion-btn" data-prompt="What are your best-selling products?">Best-selling products</button>
-                        <button class="suggestion-btn" data-prompt="Show me new arrivals">New arrivals</button>
-                        <button class="suggestion-btn" data-prompt="What products are on sale?">Sale items</button>
-                      </div>
-                    </div>
-                    
-                    <div class="suggestion-section" style="margin-bottom: 24px;">
-                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Product information</h4>
-                      <div class="suggestion-buttons">
-                        <button class="suggestion-btn" data-prompt="Tell me about shipping and delivery">Shipping info</button>
-                        <button class="suggestion-btn" data-prompt="What is your return policy?">Return policy</button>
-                        <button class="suggestion-btn" data-prompt="Do you offer customer support?">Customer support</button>
-                      </div>
-                    </div>
-                    
-                    <div class="suggestion-section">
-                      <h4 style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #555;">Help me choose</h4>
-                      <div class="suggestion-buttons">
-                        <button class="suggestion-btn" data-prompt="Help me find the perfect product for my needs">Find the right product</button>
-                        <button class="suggestion-btn" data-prompt="Compare similar products">Compare products</button>
-                      </div>
-                    </div>
-                  </div>
+                  <!-- All suggestion sections removed -->
                 </div>
               </div>
               
@@ -782,6 +767,13 @@ This creates a floating chat widget that can be added to any page
     // Add event listeners after DOM is ready
     setTimeout(() => {
       setupEventListeners();
+      // Remove has-messages if only welcome message is present
+      const messagesContainer = document.getElementById('ai-chat-messages');
+      if (messagesContainer) messagesContainer.classList.remove('has-messages');
+      // Add centering class for welcome message
+      if (messagesContainer && messagesContainer.querySelector('.ai-welcome-message')) {
+        messagesContainer.classList.add('welcome-active');
+      }
     }, 50);
   }
   
@@ -796,6 +788,18 @@ This creates a floating chat widget that can be added to any page
     const style = document.createElement('style');
     style.id = 'ai-widget-styles';
     style.textContent = `
+#ai-sales-assistant-overlay {
+  pointer-events: none !important;
+  z-index: 99998 !important;
+}
+.ai-chat-window, .ai-chat-header, .ai-chat-close {
+  pointer-events: auto !important;
+  z-index: 10001 !important;
+}
+.ai-chat-close {
+  position: relative;
+  z-index: 10002 !important;
+}
 /* AI Sales Assistant Widget Styles */
 .ai-sales-assistant-widget {
   position: fixed;
@@ -860,6 +864,11 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-toggle .button-text {
   white-space: nowrap;
 }
+@media (max-width: 480px) {
+  .ai-chat-toggle .button-text {
+    display: none !important;
+  }
+}
 
 .ai-chat-window {
   position: absolute;
@@ -881,7 +890,6 @@ This creates a floating chat widget that can be added to any page
   min-height: 500px;
   opacity: 0;
   visibility: hidden;
-  pointer-events: none;
   transition: opacity 0.2s ease, visibility 0.2s ease;
 }
 
@@ -962,17 +970,30 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-messages {
-  padding: 15px;
+  padding: 16px 15px 15px 15px;
   padding-bottom: 15px; /* Consistent padding */
   overflow-y: auto !important; /* Show scrollbar when content overflows */
   overflow-x: hidden !important;
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   gap: 0 !important; /* Remove gap to use margin instead for better control */
   scroll-behavior: smooth;
   height: 100% !important; /* Take full available height */
   box-sizing: border-box !important;
   background: #fafafa; /* Light background to distinguish from header/footer */
+  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+.ai-chat-messages.welcome-active {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* Custom scrollbar styling for webkit browsers */
@@ -1294,7 +1315,7 @@ This creates a floating chat widget that can be added to any page
 
 .ai-welcome-header {
   text-align: center;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: none !important;
   padding-bottom: 16px;
 }
 
@@ -1337,219 +1358,76 @@ This creates a floating chat widget that can be added to any page
 
 @media (max-width: 480px) {
   .ai-chat-window {
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important; /* Dynamic viewport height for mobile browsers */
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important; /* Use 100vh for full viewport height */
     border-radius: 0 !important;
     z-index: 99999 !important;
     max-height: none !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    display: grid !important; /* Ensure grid layout on mobile */
-    grid-template-rows: auto 1fr auto !important; /* Header, Messages, Input */
-    grid-template-areas: 
-      "header"
-      "messages" 
-      "input" !important;
-    overflow: hidden !important; /* Prevent window scrolling */
+    min-height: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* No scroll on window */
+    padding-bottom: 0 !important;
   }
-  
-  /* Ensure messages container is properly scrollable */
-  .ai-chat-messages-container {
-    grid-area: messages !important;
-    overflow: hidden !important;
-    height: 100% !important;
-  }
-  
-  .ai-sales-assistant-widget.position-bottom-left .ai-chat-window,
-  .ai-sales-assistant-widget.position-top-left .ai-chat-window,
-  .ai-sales-assistant-widget.position-center-left .ai-chat-window,
-  .ai-sales-assistant-widget.position-bottom-right .ai-chat-window,
-  .ai-sales-assistant-widget.position-top-right .ai-chat-window,
-  .ai-sales-assistant-widget.position-center-right .ai-chat-window {
-    top: 0 !important;
+  .ai-chat-input {
+    position: fixed !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
-    height: 100vh !important;
-    transform: none !important;
-    border-radius: 0 !important;
-  }
-  
-  .ai-chat-toggle .button-text {
-    display: none;
-  }
-  
-  .ai-message {
-    max-width: 90%; /* Allow more width on mobile */
-  }
-  
-  .message-content {
-    font-size: 13px; /* Slightly smaller font on mobile */
-  }
-  
-  .ai-chat-input {
-    padding: 15px !important;
-    border-top: 1px solid #e5e5e5;
+    z-index: 10001 !important;
     background: white !important;
-    border-radius: 0 !important; /* No border radius for full screen */
-    position: fixed !important; /* Force fixed positioning on mobile */
-    bottom: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    z-index: 100000 !important; /* Higher than chat window */
-    grid-area: input !important;
-  }
-  
-  .ai-chat-input input {
-    font-size: 16px !important; /* Prevent zoom on iOS */
-    padding: 12px 15px !important;
-  }
-  
-  .ai-chat-input button {
-    width: 44px !important;
-    height: 44px !important; /* Larger touch target on mobile */
-  }
-  
-  /* Better mobile header */
-  .ai-chat-header {
-    padding: 20px 15px !important;
-    height: auto !important;
-    min-height: 60px !important;
-  }
-  
-  .ai-chat-header h3 {
-    font-size: 18px !important;
-  }
-  
-  .ai-chat-close {
-    width: 44px !important;
-    height: 44px !important; /* Larger touch target */
+    border-radius: 0 !important;
+    height: 60px !important;
+    padding: 10px !important;
+    border-top: 1px solid #e5e5e5 !important;
     display: flex !important;
     align-items: center !important;
-    justify-content: center !important;
+    gap: 12px !important;
+    box-sizing: border-box !important;
   }
-  
-  /* Better messages container on mobile */
+  .ai-chat-messages-container {
+    flex: 1 1 0% !important;
+    min-height: 0 !important;
+    overflow: hidden !important; /* No scroll on container */
+    display: flex !important;
+    flex-direction: column !important;
+    padding-bottom: 0 !important;
+    position: relative !important;
+    height: 100%;
+    max-height: 100%;
+  }
   .ai-chat-messages {
-    padding: 15px !important;
-    padding-bottom: 20px !important; /* Standard padding */
+    flex: 1 1 0% !important;
     height: 100% !important;
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
-  }
-  
-  /* Mobile-specific input positioning */
-  .ai-chat-input {
-    padding: 15px !important;
-    border-top: 1px solid #e5e5e5;
-    background: white !important;
-    border-radius: 0 !important;
-    position: relative !important; /* Use grid positioning instead of fixed */
-    bottom: auto !important;
-    left: auto !important;
-    right: auto !important;
-    width: 100% !important;
+    max-height: 100% !important;
+    min-height: 0 !important;
+    overflow-y: auto !important; /* Only message section scrolls */
+    -webkit-overflow-scrolling: touch !important;
     box-sizing: border-box !important;
-    z-index: 10 !important;
-    grid-area: input !important;
+    padding: 16px 10px 70px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
   }
-  
-  .suggestion-btn {
-    font-size: 13px;
-    padding: 10px 14px;
+  .ai-chat-messages.welcome-active {
+    padding-top: 0 !important;
   }
-  
-  /* Mobile Product Grid Styles - Keep vertical cards but optimize for mobile */
-  .products-grid {
-    grid-template-columns: 1fr !important; /* Single column on mobile */
-    gap: 12px;
-    padding: 0 5px; /* Small padding to prevent edge cutoff */
-  }
-  
-  .product-card {
-    flex-direction: column !important; /* Keep vertical layout on mobile */
-    height: auto !important;
-    min-height: auto !important;
-    max-width: 100% !important;
+  .ai-chat-messages.has-messages {
+    justify-content: flex-start !important;
+    align-items: stretch !important;
     width: 100% !important;
-    box-sizing: border-box !important;
   }
-  
-  .product-image {
-    width: 100% !important;
-    height: 180px !important; /* Slightly larger image on mobile */
-    flex-shrink: 0;
+  .ai-welcome-header {
+    border-bottom: none !important;
   }
-  
-  .product-details {
-    padding: 12px !important;
-    flex-grow: 1;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  
-  .product-title {
-    font-size: 15px !important;
-    -webkit-line-clamp: 2 !important;
-    margin-bottom: 8px !important;
-    line-height: 1.3 !important;
-  }
-  
-  .product-price-category {
-    margin-bottom: 10px !important;
-  }
-  
-  .product-price {
-    font-size: 18px !important;
-  }
-  
-  .product-description {
-    font-size: 13px !important;
-    -webkit-line-clamp: 2 !important;
-    margin-bottom: 10px !important;
-    line-height: 1.4 !important;
-  }
-  
-  .product-action-button {
-    padding: 12px !important;
-    font-size: 14px !important;
-    margin-top: 8px !important;
-    text-align: center !important;
-  }
-  
-  .relevance-badge {
-    top: 8px !important;
-    right: 8px !important;
-    padding: 4px 8px !important;
-    font-size: 11px !important;
-  }
-  
-  .product-category {
-    font-size: 11px !important;
-    padding: 2px 6px !important;
-  }
-  
-  .product-tag {
-    font-size: 10px !important;
-    padding: 2px 5px !important;
-    margin-right: 4px !important;
-    margin-bottom: 4px !important;
-  }
-  
-  /* Ensure all product content is visible on mobile */
-  .products-grid-container {
-    width: 100% !important;
-    max-width: 100% !important;
-    overflow: visible !important;
+  .ai-welcome-message {
+    border-bottom: none !important;
   }
 }
 
@@ -1686,21 +1564,8 @@ This creates a floating chat widget that can be added to any page
     });
     console.log('✅ AI Widget: Suggestion button listeners added:', suggestionBtns.length);
     
-    // Add click outside to close functionality (only add once)
-    if (!window.aiWidgetHandlers.outsideClickHandler) {
-      window.aiWidgetHandlers.outsideClickHandler = function(e) {
-        const chatWindow = document.getElementById('ai-chat-window');
-        const widget = document.querySelector('.ai-sales-assistant-widget');
-        
-        if (chatOpen && chatWindow && widget && !widget.contains(e.target)) {
-          console.log('🖱️ AI Widget: Clicked outside, closing chat');
-          toggleAIChat();
-        }
-      };
-      
-      document.addEventListener('click', window.aiWidgetHandlers.outsideClickHandler);
-      console.log('✅ AI Widget: Outside click listener added');
-    }
+    // Remove click outside to close functionality
+    // (No document.addEventListener for outsideClickHandler)
   }
   
   // Add manual refresh function for debugging
@@ -1762,5 +1627,86 @@ This creates a floating chat widget that can be added to any page
       // Silently fail
     }
   }, 300000); // 5 minutes (300,000ms) - much more reasonable for production
+})();
+
+// Prevent iOS zoom on input focus by managing viewport meta tag
+let aiViewportMeta = null;
+function addAIViewportMeta() {
+  if (!aiViewportMeta) {
+    aiViewportMeta = document.createElement('meta');
+    aiViewportMeta.name = 'viewport';
+    aiViewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0';
+    document.head.appendChild(aiViewportMeta);
+  }
+}
+function removeAIViewportMeta() {
+  if (aiViewportMeta && aiViewportMeta.parentNode) {
+    aiViewportMeta.parentNode.removeChild(aiViewportMeta);
+    aiViewportMeta = null;
+  }
+}
+// Hook into chat open/close
+const origToggleAIChat = window.toggleAIChat;
+window.toggleAIChat = function() {
+  origToggleAIChat.apply(this, arguments);
+  const chatWindow = document.getElementById('ai-chat-window');
+  const overlay = document.getElementById('ai-sales-assistant-overlay');
+  if (chatWindow && chatWindow.classList.contains('ai-chat-open')) {
+    document.body.style.overflow = 'hidden';
+    if (overlay) overlay.style.display = 'block';
+    setTimeout(adjustMessageAreaHeight, 50);
+  } else {
+    document.body.style.overflow = '';
+    if (overlay) overlay.style.display = 'none';
+  }
+};
+function adjustMessageAreaHeight() {
+  const chatWindow = document.getElementById('ai-chat-window');
+  const header = chatWindow?.querySelector('.ai-chat-header');
+  const input = chatWindow?.querySelector('.ai-chat-input');
+  const messagesContainer = chatWindow?.querySelector('.ai-chat-messages');
+  if (chatWindow && header && input && messagesContainer) {
+    const winH = window.innerHeight;
+    const headerH = header.offsetHeight;
+    const inputH = input.offsetHeight;
+    const safeInset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('env(safe-area-inset-bottom)') || '0', 10);
+    const msgH = winH - headerH - inputH - safeInset;
+    messagesContainer.style.height = msgH + 'px';
+    messagesContainer.style.maxHeight = msgH + 'px';
+    messagesContainer.style.paddingBottom = '0px';
+  }
+}
+window.addEventListener('resize', adjustMessageAreaHeight);
+window.addEventListener('orientationchange', adjustMessageAreaHeight);
+// Also call after chat is initialized
+setTimeout(adjustMessageAreaHeight, 200);
+// After every image in a message loads, scroll to bottom
+function observeImagesForScroll() {
+  const messagesContainer = document.getElementById('ai-chat-messages');
+  if (!messagesContainer) return;
+  const imgs = messagesContainer.querySelectorAll('img');
+  imgs.forEach(img => {
+    img.addEventListener('load', () => setTimeout(scrollToBottom, 50));
+  });
+}
+// Call after adding product cards or messages
+// Scroll input into view on focus (for mobile)
+document.addEventListener('focusin', function(e) {
+  if (e.target && e.target.id === 'ai-chat-input-field') {
+    setTimeout(function() {
+      e.target.scrollIntoView({block: 'end', behavior: 'smooth'});
+    }, 100);
+  }
+});
+
+// Use MutationObserver to auto-scroll to bottom when messages change
+(function() {
+  const messagesContainer = document.getElementById('ai-chat-messages');
+  if (messagesContainer) {
+    const observer = new MutationObserver(() => {
+      setTimeout(scrollToBottom, 50);
+    });
+    observer.observe(messagesContainer, { childList: true, subtree: true });
+  }
 })();
 </script> 
