@@ -7,8 +7,6 @@ This creates a floating chat widget that can be added to any page
 {
   "name": "AI Sales Assistant",
   "target": "body",
-  "stylesheet": "ai-sales-assistant.css",
-  "javascript": "ai-sales-assistant.js",
   "settings": [
     {
       "type": "checkbox",
@@ -77,6 +75,52 @@ This creates a floating chat widget that can be added to any page
       "id": "primary_color",
       "label": "Primary Color",
       "default": "#ee5cee"
+    },
+    {
+      "type": "checkbox",
+      "id": "gradient_enabled",
+      "label": "Enable Gradient Background",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "gradient_color_1",
+      "label": "Gradient Color 1",
+      "default": "#ee5cee"
+    },
+    {
+      "type": "color",
+      "id": "gradient_color_2",
+      "label": "Gradient Color 2",
+      "default": "#31d1d1"
+    },
+    {
+      "type": "select",
+      "id": "gradient_direction",
+      "label": "Gradient Direction",
+      "options": [
+        { "value": "to right", "label": "Left to Right" },
+        { "value": "to left", "label": "Right to Left" },
+        { "value": "to bottom", "label": "Top to Bottom" },
+        { "value": "to top", "label": "Bottom to Top" }
+      ],
+      "default": "to right"
+    },
+    {
+      "type": "checkbox",
+      "id": "glass_effect",
+      "label": "Enable Glass Effect",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "widget_style",
+      "label": "Widget Style",
+      "options": [
+        { "value": "eye-animation", "label": "Eye Animation" },
+        { "value": "simple", "label": "Simple Chat Icon" }
+      ],
+      "default": "eye-animation"
     }
   ]
 }
@@ -101,7 +145,13 @@ This creates a floating chat widget that can be added to any page
     chatTitle: {{ block.settings.chat_title | json }},
     welcomeMessage: {{ block.settings.welcome_message | json }},
     inputPlaceholder: {{ block.settings.input_placeholder | json }},
-    primaryColor: {{ block.settings.primary_color | json }}
+    primaryColor: {{ block.settings.primary_color | json }},
+    gradientEnabled: {{ block.settings.gradient_enabled | json }},
+    gradientColor1: {{ block.settings.gradient_color_1 | json }},
+    gradientColor2: {{ block.settings.gradient_color_2 | json }},
+    gradientDirection: {{ block.settings.gradient_direction | json }},
+    glassEffect: {{ block.settings.glass_effect | json }},
+    widgetStyle: {{ block.settings.widget_style | json }}
   };
   
   // Toggle chat window
@@ -710,22 +760,44 @@ This creates a floating chat widget that can be added to any page
     // Clear any existing widget
     container.innerHTML = '';
     
+    function getWidgetBackgroundStyle() {
+      if (widgetSettings.gradientEnabled) {
+        return `linear-gradient(${widgetSettings.gradientDirection}, ${widgetSettings.gradientColor1}, ${widgetSettings.gradientColor2})`;
+      }
+      return widgetSettings.primaryColor;
+    }
+    
+    function getCombinedStyle() {
+      const baseBackground = getWidgetBackgroundStyle();
+      let style = `background: ${baseBackground};`;
+      
+      if (widgetSettings.glassEffect) {
+        // Create glass effect by overlaying transparent white on the base background
+        style = `background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1)), ${baseBackground}; backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.18);`;
+      }
+      
+      return style;
+    }
+
     container.innerHTML = `
       <div class="ai-sales-assistant-widget position-${widgetSettings.position}" data-widget-id="ai-sales-assistant">
         <!-- Chat Toggle Button -->
         <button 
           class="ai-chat-toggle" 
           id="ai-chat-toggle-btn"
-          style="background-color: ${widgetSettings.primaryColor};"
+          style="${getCombinedStyle()}"
         >
-          <img src="{{ 'animationeyelogo.svg' | asset_url }}" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />
+          ${widgetSettings.widgetStyle === 'eye-animation' ? 
+            '<img src="{{ "animationeyelogo.svg" | asset_url }}" alt="iHeard.ai" width="24" height="24" style="object-fit: contain;" />' :
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>'
+          }
           <span class="button-text">${widgetSettings.buttonText}</span>
         </button>
         
         <!-- Chat Window -->
         <div id="ai-chat-window" class="ai-chat-window" style="display: none;">
           <!-- Chat Header -->
-          <div class="ai-chat-header" style="background-color: ${widgetSettings.primaryColor};">
+          <div class="ai-chat-header" style="${getCombinedStyle()}">
             <h3>${widgetSettings.chatTitle}</h3>
             <button class="ai-chat-close" id="ai-chat-close-btn">
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">

@@ -30,6 +30,12 @@ const DEFAULT_SETTINGS = {
   welcomeMessage: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
   inputPlaceholder: "Ask me anything about our products...",
   primaryColor: "#e620e6",
+  gradientEnabled: false,
+  gradientColor1: "#ee5cee",
+  gradientColor2: "#31d1d1",
+  gradientDirection: "to right",
+  glassEffect: false,
+  widgetStyle: "eye-animation",
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -150,6 +156,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     welcomeMessage: formData.get("welcomeMessage") as string,
     inputPlaceholder: formData.get("inputPlaceholder") as string,
     primaryColor: formData.get("primaryColor") as string,
+    gradientEnabled: formData.get("gradientEnabled") === "true",
+    gradientColor1: formData.get("gradientColor1") as string,
+    gradientColor2: formData.get("gradientColor2") as string,
+    gradientDirection: formData.get("gradientDirection") as string,
+    glassEffect: formData.get("glassEffect") === "true",
+    widgetStyle: formData.get("widgetStyle") as string,
     // Handle webhookUrl properly - only include if it has a value
     ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
   };
@@ -209,6 +221,42 @@ export default function SettingsPage() {
     { label: "Center Right", value: "center-right" },
     { label: "Center Left", value: "center-left" },
   ];
+
+  // Helper functions for widget preview styling
+  const getPreviewBackgroundStyle = () => {
+    if (settings.gradientEnabled) {
+      return `linear-gradient(${settings.gradientDirection}, ${settings.gradientColor1}, ${settings.gradientColor2})`;
+    }
+    return settings.primaryColor;
+  };
+
+  const getPreviewGlassStyle = () => {
+    if (settings.glassEffect) {
+      return {
+        backdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255,255,255,0.18)',
+        position: 'relative'
+      };
+    }
+    return {};
+  };
+
+  const getPreviewCombinedStyle = () => {
+    const baseBackground = getPreviewBackgroundStyle();
+    const glassStyle = getPreviewGlassStyle();
+    
+    if (settings.glassEffect) {
+      // Create a glass overlay effect by combining background with transparency
+      return {
+        ...glassStyle,
+        background: `linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0.1)), ${baseBackground}`,
+      };
+    }
+    
+    return {
+      background: baseBackground
+    };
+  };
 
   return (
     <Page
@@ -307,12 +355,136 @@ export default function SettingsPage() {
                       const hex = hsbToHex(color);
                       setSettings((prev: any) => ({ ...prev, primaryColor: hex }));
                     }}
+                    disabled={settings.gradientEnabled}
                   />
-                  <Text variant="bodySm" as="p" tone="subdued">
-                    Current color: {settings.primaryColor}
+                  <Text variant="bodySm" as="p" tone={settings.gradientEnabled ? "disabled" : "subdued"}>
+                    {settings.gradientEnabled 
+                      ? "Primary color is disabled when gradient background is enabled"
+                      : `Current color: ${settings.primaryColor}`
+                    }
                   </Text>
                 </BlockStack>
+
+                <FormLayout.Group>
+                  <Checkbox
+                    label="Enable Gradient Background"
+                    checked={settings.gradientEnabled}
+                    onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, gradientEnabled: checked }))}
+                  />
+                  <ColorPicker
+                    color={hexToHsb(settings.gradientColor1)}
+                    onChange={(color) => {
+                      const hex = hsbToHex(color);
+                      setSettings((prev: any) => ({ ...prev, gradientColor1: hex }));
+                    }}
+                    disabled={!settings.gradientEnabled}
+                  />
+                  <ColorPicker
+                    color={hexToHsb(settings.gradientColor2)}
+                    onChange={(color) => {
+                      const hex = hsbToHex(color);
+                      setSettings((prev: any) => ({ ...prev, gradientColor2: hex }));
+                    }}
+                    disabled={!settings.gradientEnabled}
+                  />
+                  <Select
+                    label="Gradient Direction"
+                    options={[
+                      { label: "Left to Right", value: "to right" },
+                      { label: "Right to Left", value: "to left" },
+                      { label: "Top to Bottom", value: "to bottom" },
+                      { label: "Bottom to Top", value: "to top" },
+                    ]}
+                    value={settings.gradientDirection}
+                    onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, gradientDirection: value }))}
+                    disabled={!settings.gradientEnabled}
+                  />
+                </FormLayout.Group>
+                <Checkbox
+                  label="Enable Glass Effect"
+                  checked={settings.glassEffect}
+                  onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, glassEffect: checked }))}
+                />
+                
+                <Select
+                  label="Widget Style"
+                  options={[
+                    { label: "Eye Animation (Default)", value: "eye-animation" },
+                    { label: "Simple Chat Icon", value: "simple" },
+                  ]}
+                  value={settings.widgetStyle}
+                  onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, widgetStyle: value }))}
+                  helpText="Choose between the animated eye logo or a simple chat icon"
+                />
               </FormLayout>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <Text variant="headingMd" as="h2">
+                Widget Preview
+              </Text>
+              
+              <div style={{ 
+                position: "relative", 
+                height: "300px", 
+                border: "2px dashed #e1e3e5", 
+                borderRadius: "8px",
+                background: "#f6f6f7"
+              }}>
+                <div style={{
+                  position: "absolute",
+                  ...(settings.position.includes("bottom") ? { bottom: "20px" } : { top: "20px" }),
+                  ...(settings.position.includes("right") ? { right: "20px" } : { left: "20px" }),
+                  ...(settings.position.includes("center") && { 
+                    top: "50%", 
+                    transform: "translateY(-50%)" 
+                  }),
+                }}>
+                  <div style={{
+                    ...getPreviewCombinedStyle(),
+                    color: "white",
+                    padding: "12px 16px",
+                    borderRadius: "25px",
+                    fontSize: "14px",
+                    fontWeight: "500",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    opacity: settings.enabled ? 1 : 0.5,
+                  }}>
+                    {settings.widgetStyle === "eye-animation" ? (
+                      <img src="/animationeyelogo.svg" alt="AI Eye" width="24" height="24" style={{objectFit: 'contain'}} />
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                    )}
+                    {settings.buttonText}
+                  </div>
+                </div>
+                
+                <div style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  transform: "translate(-50%, -50%)",
+                  textAlign: "center",
+                  color: "#6d7175"
+                }}>
+                  <Text variant="bodyMd" as="p" tone="subdued">
+                    Widget Preview
+                  </Text>
+                  <br />
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Position: {positionOptions.find(opt => opt.value === settings.position)?.label}
+                  </Text>
+                </div>
+              </div>
             </BlockStack>
           </Card>
         </Layout.Section>
@@ -394,70 +566,6 @@ export default function SettingsPage() {
                   </Text>
                 </Banner>
               </FormLayout>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text variant="headingMd" as="h2">
-                Widget Preview
-              </Text>
-              
-              <div style={{ 
-                position: "relative", 
-                height: "300px", 
-                border: "2px dashed #e1e3e5", 
-                borderRadius: "8px",
-                background: "#f6f6f7"
-              }}>
-                <div style={{
-                  position: "absolute",
-                  ...(settings.position.includes("bottom") ? { bottom: "20px" } : { top: "20px" }),
-                  ...(settings.position.includes("right") ? { right: "20px" } : { left: "20px" }),
-                  ...(settings.position.includes("center") && { 
-                    top: "50%", 
-                    transform: "translateY(-50%)" 
-                  }),
-                }}>
-                  <div style={{
-                    background: settings.primaryColor,
-                    color: "white",
-                    padding: "12px 16px",
-                    borderRadius: "25px",
-                    fontSize: "14px",
-                    fontWeight: "500",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    opacity: settings.enabled ? 1 : 0.5,
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    {settings.buttonText}
-                  </div>
-                </div>
-                
-                                 <div style={{
-                   position: "absolute",
-                   top: "50%",
-                   left: "50%",
-                   transform: "translate(-50%, -50%)",
-                   textAlign: "center",
-                   color: "#6d7175"
-                 }}>
-                   <Text variant="bodyMd" as="p" tone="subdued">
-                     Widget Preview
-                   </Text>
-                   <br />
-                   <Text variant="bodySm" as="p" tone="subdued">
-                     Position: {positionOptions.find(opt => opt.value === settings.position)?.label}
-                   </Text>
-                 </div>
-              </div>
             </BlockStack>
           </Card>
         </Layout.Section>

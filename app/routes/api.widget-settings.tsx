@@ -13,6 +13,12 @@ const DEFAULT_SETTINGS = {
   welcomeMessage: "Hello! I'm your AI sales assistant. I can help you find products, answer questions about pricing, shipping, and provide personalized recommendations. How can I assist you today?",
   inputPlaceholder: "Ask me anything about our products...",
   primaryColor: "#e620e6",
+  gradientEnabled: false,
+  gradientColor1: "#ee5cee",
+  gradientColor2: "#31d1d1",
+  gradientDirection: "to right",
+  glassEffect: false,
+  widgetStyle: "eye-animation",
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
