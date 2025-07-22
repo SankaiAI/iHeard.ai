@@ -55,9 +55,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return response;
   } catch (error) {
     console.error("Error fetching widget settings:", error);
+    console.error("DATABASE_URL:", process.env.DATABASE_URL?.substring(0, 50) + "...");
+    console.error("Error details:", {
+      name: error.name,
+      message: error.message,
+      code: error.code
+    });
     
     // Return default settings on error
-    const response = json({ settings: DEFAULT_SETTINGS });
+    const response = json({ 
+      settings: DEFAULT_SETTINGS,
+      error: "Database connection failed - using defaults"
+    });
     response.headers.set("Access-Control-Allow-Origin", "*");
     response.headers.set("Access-Control-Allow-Methods", "GET, POST");
     response.headers.set("Access-Control-Allow-Headers", "Content-Type");
