@@ -322,6 +322,7 @@ This creates a floating chat widget that can be added to any page
   // Display enhanced product recommendations
   function displayProductRecommendations(recommendations) {
     const messagesContainer = document.getElementById('ai-chat-messages');
+    console.log('[AI Widget] displayProductRecommendations called, recommendations:', recommendations);
     
     // Add a container for all product cards
     const productsContainer = document.createElement('div');
@@ -533,6 +534,12 @@ This creates a floating chat widget that can be added to any page
     // Scroll to bottom after adding recommendations
     setTimeout(scrollToBottom, 100);
     setTimeout(observeImagesForScroll, 200);
+    // --- Fireworks Animation Trigger ---
+    if (typeof window.triggerFireworksAnimation === 'function') {
+      window.triggerFireworksAnimation();
+    } else {
+      triggerFireworksAnimation();
+    }
   }
   
   // Show/hide loading indicator
@@ -726,7 +733,8 @@ This creates a floating chat widget that can be added to any page
               </svg>
             </button>
           </div>
-          
+          <!-- Fireworks Animation Overlay -->
+          <div id="ai-fireworks-animation" style="display:none;"></div>
           <!-- Chat Messages Container -->
           <div class="ai-chat-messages-container">
             <!-- Chat Messages -->
@@ -1453,6 +1461,45 @@ This creates a floating chat widget that can be added to any page
     font-size: 18px;
   }
 }
+    /* --- Fireworks Animation Styles --- */
+    #ai-fireworks-animation {
+      pointer-events: none;
+      position: absolute;
+      left: 0; top: 0; right: 0; bottom: 0;
+      width: 100%; height: 100%;
+      z-index: 10010;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+/* Confetti Party Animation Styles */
+.ai-confetti-piece {
+  position: absolute;
+  top: -40px;
+  width: 8px;
+  height: 24px;
+  border-radius: 3px;
+  opacity: 0.85;
+  will-change: transform, opacity;
+  animation: ai-confetti-fall 1.6s cubic-bezier(0.6,0.2,0.4,1) forwards;
+}
+@keyframes ai-confetti-fall {
+  0% {
+    opacity: 0.85;
+    transform: translateY(0) rotateZ(var(--confetti-rotate, 0deg)) scale(1) skewX(var(--confetti-skew, 0deg));
+  }
+  10% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+    transform: translateY(80vh) rotateZ(calc(var(--confetti-rotate, 0deg) + 180deg)) scale(1) skewX(var(--confetti-skew, 0deg));
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(100vh) rotateZ(calc(var(--confetti-rotate, 0deg) + 360deg)) scale(0.9) skewX(var(--confetti-skew, 0deg));
+  }
+}
     `;
     document.head.appendChild(style);
   }
@@ -1712,4 +1759,51 @@ document.addEventListener('focusin', function(e) {
     observer.observe(messagesContainer, { childList: true, subtree: true });
   }
 })();
+
+// --- Fireworks Animation Logic ---
+function triggerFireworksAnimation() {
+  console.log('[AI Widget] triggerFireworksAnimation (confetti) called');
+  const fireworks = document.getElementById('ai-fireworks-animation');
+  if (!fireworks) { console.log('[AI Widget] Fireworks overlay not found!'); return; }
+  // Remove any previous confetti
+  fireworks.innerHTML = '';
+  fireworks.style.display = 'block';
+  // Force reflow for transition
+  void fireworks.offsetWidth;
+  fireworks.style.opacity = '1';
+  // Confetti colors
+  const confettiColors = [
+    '#ee5cee', '#31d1d1', '#ffd700', '#ff5c5c', '#4caf50', '#2196f3', '#ff9800', '#9c27b0', '#e91e63', '#00bcd4', '#fff', '#f44336', '#8bc34a', '#ffeb3b', '#3f51b5', '#ffb300'
+  ];
+  // Create 35 confetti pieces
+  for (let i = 0; i < 35; i++) {
+    const confetti = document.createElement('div');
+    confetti.className = 'ai-confetti-piece';
+    // Random color
+    confetti.style.background = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+    // Random left position (5% to 95%)
+    confetti.style.left = (5 + Math.random() * 90) + '%';
+    // Random width/height
+    const w = 6 + Math.random() * 8;
+    const h = 16 + Math.random() * 18;
+    confetti.style.width = w + 'px';
+    confetti.style.height = h + 'px';
+    // Random rotation and skew
+    confetti.style.setProperty('--confetti-rotate', Math.floor(Math.random() * 360) + 'deg');
+    confetti.style.setProperty('--confetti-skew', (Math.random() * 30 - 15) + 'deg');
+    // Random animation delay (0-0.7s)
+    confetti.style.animationDelay = (Math.random() * 0.7) + 's';
+    // Random border radius for more variety
+    confetti.style.borderRadius = (2 + Math.random() * 5) + 'px';
+    fireworks.appendChild(confetti);
+  }
+  // Hide after 2.2s
+  setTimeout(() => {
+    fireworks.style.opacity = '0';
+    setTimeout(() => {
+      fireworks.style.display = 'none';
+      fireworks.innerHTML = '';
+    }, 350); // allow transition to finish
+  }, 2200);
+}
 </script> 
