@@ -48,7 +48,9 @@ model WidgetSettings {
   glassEffect     Boolean  @default(false)
   widgetStyle     String   @default("eye-animation") // "eye-animation" or "simple"
   showButtonText  Boolean  @default(true) // Whether to show button text or just icon
-  webhookUrl      String?  // Optional - if not set, uses default N8N_WEBHOOK_URL from env
+  workflowType    String   @default("default") // "default" or "custom"
+  customWebhookUrl String? // User's custom N8N webhook URL when using custom workflow
+  chatBackgroundColor String @default("white") // Chat background color: 'white' or 'black'
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

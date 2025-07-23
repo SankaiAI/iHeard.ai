@@ -37,6 +37,9 @@ const DEFAULT_SETTINGS = {
   glassEffect: false,
   widgetStyle: "eye-animation",
   showButtonText: true,
+  workflowType: "default",
+  customWebhookUrl: "",
+  chatBackgroundColor: "white",
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -164,8 +167,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     glassEffect: formData.get("glassEffect") === "true",
     widgetStyle: formData.get("widgetStyle") as string,
     showButtonText: formData.get("showButtonText") === "true",
-    // Handle webhookUrl properly - only include if it has a value
-    ...(formData.get("webhookUrl") && { webhookUrl: formData.get("webhookUrl") as string }),
+    workflowType: formData.get("workflowType") as string,
+    chatBackgroundColor: formData.get("chatBackgroundColor") as string,
+    // Handle customWebhookUrl properly - only include if it has a value
+    ...(formData.get("customWebhookUrl") && { customWebhookUrl: formData.get("customWebhookUrl") as string }),
   };
   
   // Save settings to database
@@ -196,16 +201,9 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   
-  // Determine workflow type based on webhook URL
+  // Get workflow type from explicit workflowType field
   const getWorkflowType = () => {
-    const url = (settings as any).webhookUrl;
-    const isValidCustomUrl = url && 
-                           typeof url === 'string' && 
-                           url.trim() !== '' && 
-                           url !== 'https://' &&
-                           url.startsWith('https://') &&
-                           url.length > 8;
-    return isValidCustomUrl ? "custom" : "default";
+    return (settings as any).workflowType || "default";
   };
 
   // Show success banner when settings are saved
@@ -333,6 +331,17 @@ export default function SettingsPage() {
                   checked={settings.showButtonText}
                   onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, showButtonText: checked }))}
                   helpText="Toggle to show/hide the button text next to the icon"
+                />
+
+                <Select
+                  label="Chat Background Color"
+                  options={[
+                    { label: "White Background", value: "white" },
+                    { label: "Black Background", value: "black" }
+                  ]}
+                  value={settings.chatBackgroundColor || "white"}
+                  onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, chatBackgroundColor: value }))}
+                  helpText="Choose the background color for the chat interface"
                 />
 
                 <TextField
@@ -531,27 +540,48 @@ export default function SettingsPage() {
                   ]}
                   onChange={(value) => {
                     if (value === "default") {
-                      setSettings((prev: any) => ({ ...prev, webhookUrl: "" }));
+                      setSettings((prev: any) => ({ 
+                        ...prev, 
+                        workflowType: "default",
+                        customWebhookUrl: ""
+                      }));
                     } else {
-                      // Set to a placeholder that will enable the field but not be considered valid
-                      setSettings((prev: any) => ({ ...prev, webhookUrl: "https://" }));
+                      setSettings((prev: any) => ({ 
+                        ...prev, 
+                        workflowType: "custom",
+                        customWebhookUrl: "https://" 
+                      }));
                     }
                   }}
                   helpText="Select whether to use the built-in AI workflow or your own custom setup"
                 />
+
                 
-                <TextField
-                  label="Custom N8N Webhook URL"
-                  value={(settings as any).webhookUrl || ""}
-                  onChange={(value) => 
-                    setSettings((prev: any) => ({ ...prev, webhookUrl: value }))
-                  }
-                  placeholder="https://your-n8n-instance.com/webhook/your-workflow"
-                  helpText={getWorkflowType() === "custom" ? "Enter your N8N webhook URL. Must be HTTPS." : "Select 'Use My Custom N8N Workflow' above to enable this field."}
-                  autoComplete="off"
-                  type="url"
-                  disabled={getWorkflowType() === "default"}
-                />
+{getWorkflowType() === "custom" && (
+                  <TextField
+                    label="Custom N8N Webhook URL"
+                    value={(settings as any).customWebhookUrl || ""}
+                    onChange={(value) => 
+                      setSettings((prev: any) => ({ ...prev, customWebhookUrl: value }))
+                    }
+                    placeholder="https://your-n8n-instance.com/webhook/your-workflow"
+                    helpText={(() => {
+                      const customUrl = (settings as any).customWebhookUrl;
+                      const isValidCompleteUrl = customUrl && 
+                                                typeof customUrl === 'string' && 
+                                                customUrl.trim() !== '' && 
+                                                customUrl !== 'https://' &&
+                                                customUrl.startsWith('https://') &&
+                                                customUrl.length > 8;
+                      
+                      return isValidCompleteUrl 
+                        ? "Valid N8N webhook URL entered." 
+                        : "Enter your complete N8N webhook URL. Must be HTTPS.";
+                    })()}
+                    autoComplete="off"
+                    type="url"
+                  />
+                )}
                 
                 <Banner tone="info">
                   <Text variant="bodyMd" as="p">

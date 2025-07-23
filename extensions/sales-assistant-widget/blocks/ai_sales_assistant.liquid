@@ -128,6 +128,17 @@ This creates a floating chat widget that can be added to any page
       "label": "Show Button Text",
       "default": true,
       "info": "Toggle to show/hide the button text next to the icon"
+    },
+    {
+      "type": "select",
+      "id": "chat_background_color",
+      "label": "Chat Background Color",
+      "options": [
+        { "value": "white", "label": "White Background" },
+        { "value": "black", "label": "Black Background" }
+      ],
+      "default": "white",
+      "info": "Choose the background color for the chat interface"
     }
   ]
 }
@@ -159,9 +170,40 @@ This creates a floating chat widget that can be added to any page
     gradientDirection: {{ block.settings.gradient_direction | json }},
     glassEffect: {{ block.settings.glass_effect | json }},
     widgetStyle: {{ block.settings.widget_style | json }},
-    showButtonText: {{ block.settings.show_button_text | json }}
+    showButtonText: {{ block.settings.show_button_text | json }},
+    chatBackgroundColor: {{ block.settings.chat_background_color | json }}
   };
   
+  // Start typewriter animation for welcome message
+  function startWelcomeAnimation() {
+    const welcomeText = document.getElementById('welcome-text');
+    if (welcomeText && !welcomeText.classList.contains('animation-started')) {
+      welcomeText.classList.add('animation-started');
+      
+      const fullText = welcomeText.textContent;
+      welcomeText.textContent = '';
+      
+      let i = 0;
+      const typingSpeed = 50; // milliseconds per character
+      
+      function type() {
+        if (i < fullText.length) {
+          welcomeText.textContent += fullText.charAt(i);
+          i++;
+          setTimeout(type, typingSpeed);
+        } else {
+          // Remove cursor after animation completes
+          setTimeout(() => {
+            welcomeText.classList.add('typing-complete');
+          }, 1000); // Wait 1 second after typing finishes
+        }
+      }
+      
+      // Start typing with a small delay
+      setTimeout(type, 300);
+    }
+  }
+
   // Toggle chat window
   window.toggleAIChat = function() {
     console.log('[AI Widget] toggleAIChat called, current state:', chatOpen);
@@ -174,6 +216,11 @@ This creates a floating chat widget that can be added to any page
     if (chatOpen) {
       chatWindow.classList.add('ai-chat-open');
       chatWindow.style.display = 'grid'; // Ensure visible when open
+      
+      // Start welcome message animation with a slight delay
+      setTimeout(() => {
+        startWelcomeAnimation();
+      }, 300);
     } else {
       chatWindow.classList.remove('ai-chat-open');
       chatWindow.style.display = 'none'; // Ensure hidden when closed
@@ -786,6 +833,7 @@ This creates a floating chat widget that can be added to any page
       
       return style;
     }
+    
 
     container.innerHTML = `
       <div class="ai-sales-assistant-widget position-${widgetSettings.position}" data-widget-id="ai-sales-assistant">
@@ -803,7 +851,7 @@ This creates a floating chat widget that can be added to any page
         </button>
         
         <!-- Chat Window -->
-        <div id="ai-chat-window" class="ai-chat-window" style="display: none;">
+        <div id="ai-chat-window" class="ai-chat-window" style="display: none; background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}">
           <!-- Chat Header -->
           <div class="ai-chat-header" style="${getCombinedStyle()}">
             <h3>${widgetSettings.chatTitle}</h3>
@@ -816,13 +864,13 @@ This creates a floating chat widget that can be added to any page
           <!-- Fireworks Animation Overlay -->
           <div id="ai-fireworks-animation" style="display:none;"></div>
           <!-- Chat Messages Container -->
-          <div class="ai-chat-messages-container">
+          <div class="ai-chat-messages-container" style="background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'};">
             <!-- Chat Messages -->
-            <div id="ai-chat-messages" class="ai-chat-messages">
+            <div id="ai-chat-messages" class="ai-chat-messages" style="background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'};">
               <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
                 <div class="ai-welcome-container" style="background: transparent; padding: 0;">
                   <div class="ai-welcome-header" style="margin-bottom: 20px;">
-                    <h3 style="margin: 0; font-size: 18px; font-weight: 600; color: #333;">${widgetSettings.welcomeMessage}</h3>
+                    <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333'};">${widgetSettings.welcomeMessage}</h3>
                   </div>
                   <!-- All suggestion sections removed -->
                 </div>
@@ -833,13 +881,14 @@ This creates a floating chat widget that can be added to any page
           </div>
           
           <!-- Chat Input -->
-          <div class="ai-chat-input">
+          <div class="ai-chat-input" style="${getCombinedStyle()}">
             <input 
               type="text" 
               id="ai-chat-input-field"
               placeholder="${widgetSettings.inputPlaceholder}"
+              style="background: white; color: black;"
             />
-            <button id="ai-chat-send-btn" style="background-color: ${widgetSettings.primaryColor};">
+            <button id="ai-chat-send-btn">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -1217,11 +1266,10 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-input {
   padding: 15px;
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid rgba(255,255,255,0.2);
   display: flex;
   gap: 10px;
   align-items: center;
-  background: white !important; /* Ensure solid background */
   z-index: 10; /* Keep above other content */
   height: 70px !important; /* Fixed height to prevent shifting */
   box-sizing: border-box !important;
@@ -1243,9 +1291,9 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input button {
-  background: var(--ai-primary-color, #ee5cee);
-  border: none;
-  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
   width: 40px;
   height: 40px;
   cursor: pointer;
@@ -1253,10 +1301,36 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
+  color: white;
 }
 
 .ai-chat-input button:hover {
-  background: var(--ai-primary-color-hover, #dd44dd);
+  background: rgba(255,255,255,0.3);
+  border-color: rgba(255,255,255,0.6);
+}
+
+/* Typewriter Animation for Welcome Message */
+.typewriter {
+  text-align: center;
+  margin: 0 auto;
+  word-wrap: break-word;
+  border-right: 2px solid;
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  from, to { 
+    border-color: transparent;
+  }
+  50% { 
+    border-color: currentColor;
+  }
+}
+
+/* Remove cursor after animation */
+.typewriter.typing-complete {
+  border-right: none;
+  animation: none;
 }
 
 /* Mobile responsiveness */
@@ -1469,7 +1543,6 @@ This creates a floating chat widget that can be added to any page
     bottom: 0 !important;
     width: 100vw !important;
     z-index: 10001 !important;
-    background: white !important;
     border-radius: 0 !important;
     height: 60px !important;
     padding: 10px !important;

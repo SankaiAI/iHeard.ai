@@ -20,6 +20,9 @@ const DEFAULT_SETTINGS = {
   glassEffect: false,
   widgetStyle: "eye-animation",
   showButtonText: true,
+  workflowType: "default",
+  customWebhookUrl: "",
+  chatBackgroundColor: "white",
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -223,18 +226,33 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     
 
     
-    // Use custom webhook URL only if it's a valid URL (not just "https://")
-    const customWebhookUrl = (settings as any)?.webhookUrl;
-    const isValidCustomUrl = customWebhookUrl && 
-                            typeof customWebhookUrl === 'string' && 
-                            customWebhookUrl.trim() !== '' && 
-                            customWebhookUrl !== 'https://' &&
-                            customWebhookUrl.startsWith('https://') &&
-                            customWebhookUrl.length > 8;
+    // Choose webhook URL based on explicit workflowType
+    const workflowType = (settings as any)?.workflowType || "default";
+    const customWebhookUrl = (settings as any)?.customWebhookUrl;
     
-    const webhookUrl = isValidCustomUrl ? customWebhookUrl : process.env.N8N_WEBHOOK_URL;
+    let webhookUrl = process.env.N8N_WEBHOOK_URL; // Default to environment variable
+    let isUsingCustomUrl = false;
+    
+    if (workflowType === "custom") {
+      // Only use custom URL if workflow type is explicitly set to custom AND URL is valid
+      const isValidCustomUrl = customWebhookUrl && 
+                              typeof customWebhookUrl === 'string' && 
+                              customWebhookUrl.trim() !== '' && 
+                              customWebhookUrl !== 'https://' &&
+                              customWebhookUrl.startsWith('https://') &&
+                              customWebhookUrl.length > 8;
+      
+      if (isValidCustomUrl) {
+        webhookUrl = customWebhookUrl;
+        isUsingCustomUrl = true;
+      }
+    }
+    
+    console.log('🔧 Workflow type:', workflowType);
+    console.log('🔧 Custom webhook URL:', customWebhookUrl);
+    console.log('🔧 Environment default URL:', process.env.N8N_WEBHOOK_URL);
     console.log('🔧 Final webhook URL being used:', webhookUrl);
-    console.log('🔧 Is using custom URL:', isValidCustomUrl);
+    console.log('🔧 Is using custom URL:', isUsingCustomUrl);
     
     // Create N8N service instance with custom webhook URL if provided
     const customN8NService = new N8NService(webhookUrl);
