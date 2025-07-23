@@ -51,6 +51,7 @@ model WidgetSettings {
   workflowType    String   @default("default") // "default" or "custom"
   customWebhookUrl String? // User's custom N8N webhook URL when using custom workflow
   chatBackgroundColor String @default("white") // Chat background color: 'white' or 'black'
+  useDefaultAppearance Boolean @default(false) // Use default dark appearance instead of custom colors
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }

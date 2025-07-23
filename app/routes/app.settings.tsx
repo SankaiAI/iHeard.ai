@@ -40,6 +40,7 @@ const DEFAULT_SETTINGS = {
   workflowType: "default",
   customWebhookUrl: "",
   chatBackgroundColor: "white",
+  useDefaultAppearance: false,
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -169,6 +170,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     showButtonText: formData.get("showButtonText") === "true",
     workflowType: formData.get("workflowType") as string,
     chatBackgroundColor: formData.get("chatBackgroundColor") as string,
+    useDefaultAppearance: formData.get("useDefaultAppearance") === "true",
     // Handle customWebhookUrl properly - only include if it has a value
     ...(formData.get("customWebhookUrl") && { customWebhookUrl: formData.get("customWebhookUrl") as string }),
   };
@@ -333,17 +335,6 @@ export default function SettingsPage() {
                   helpText="Toggle to show/hide the button text next to the icon"
                 />
 
-                <Select
-                  label="Chat Background Color"
-                  options={[
-                    { label: "White Background", value: "white" },
-                    { label: "Black Background", value: "black" }
-                  ]}
-                  value={settings.chatBackgroundColor || "white"}
-                  onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, chatBackgroundColor: value }))}
-                  helpText="Choose the background color for the chat interface"
-                />
-
                 <TextField
                   label="Chat Title"
                   value={settings.chatTitle}
@@ -375,6 +366,34 @@ export default function SettingsPage() {
                   autoComplete="off"
                 />
 
+                <Divider />
+                
+                <BlockStack gap="200">
+                  <Text variant="headingSm" as="h3">
+                    Default Appearance
+                  </Text>
+                  <Checkbox
+                    label="Use Default Appearance"
+                    checked={settings.useDefaultAppearance}
+                    onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, useDefaultAppearance: checked }))}
+                    helpText="Enable to use the default dark theme appearance. This will disable chat background color and custom color settings below."
+                  />
+                </BlockStack>
+
+                <Select
+                  label="Chat Background Color"
+                  options={[
+                    { label: "White Background", value: "white" },
+                    { label: "Black Background", value: "black" }
+                  ]}
+                  value={settings.chatBackgroundColor || "white"}
+                  onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, chatBackgroundColor: value }))}
+                  helpText="Choose the background color for the chat interface"
+                  disabled={settings.useDefaultAppearance}
+                />
+
+                <Divider />
+
                 <BlockStack gap="200">
                   <Text variant="bodyMd" as="p">
                     Primary Color
@@ -385,10 +404,12 @@ export default function SettingsPage() {
                       const hex = hsbToHex(color);
                       setSettings((prev: any) => ({ ...prev, primaryColor: hex }));
                     }}
-                    disabled={settings.gradientEnabled}
+                    disabled={settings.gradientEnabled || settings.useDefaultAppearance}
                   />
-                  <Text variant="bodySm" as="p" tone={settings.gradientEnabled ? "disabled" : "subdued"}>
-                    {settings.gradientEnabled 
+                  <Text variant="bodySm" as="p" tone={(settings.gradientEnabled || settings.useDefaultAppearance) ? "disabled" : "subdued"}>
+                    {settings.useDefaultAppearance
+                      ? "Primary color is disabled when using default appearance"
+                      : settings.gradientEnabled 
                       ? "Primary color is disabled when gradient background is enabled"
                       : `Current color: ${settings.primaryColor}`
                     }
@@ -400,6 +421,7 @@ export default function SettingsPage() {
                     label="Enable Gradient Background"
                     checked={settings.gradientEnabled}
                     onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, gradientEnabled: checked }))}
+                    disabled={settings.useDefaultAppearance}
                   />
                   <ColorPicker
                     color={hexToHsb(settings.gradientColor1)}
@@ -407,7 +429,7 @@ export default function SettingsPage() {
                       const hex = hsbToHex(color);
                       setSettings((prev: any) => ({ ...prev, gradientColor1: hex }));
                     }}
-                    disabled={!settings.gradientEnabled}
+                    disabled={!settings.gradientEnabled || settings.useDefaultAppearance}
                   />
                   <ColorPicker
                     color={hexToHsb(settings.gradientColor2)}
@@ -415,7 +437,7 @@ export default function SettingsPage() {
                       const hex = hsbToHex(color);
                       setSettings((prev: any) => ({ ...prev, gradientColor2: hex }));
                     }}
-                    disabled={!settings.gradientEnabled}
+                    disabled={!settings.gradientEnabled || settings.useDefaultAppearance}
                   />
                   <Select
                     label="Gradient Direction"
@@ -427,13 +449,14 @@ export default function SettingsPage() {
                     ]}
                     value={settings.gradientDirection}
                     onChange={(value) => setSettings((prev: SettingsType) => ({ ...prev, gradientDirection: value }))}
-                    disabled={!settings.gradientEnabled}
+                    disabled={!settings.gradientEnabled || settings.useDefaultAppearance}
                   />
                 </FormLayout.Group>
                 <Checkbox
                   label="Enable Glass Effect"
                   checked={settings.glassEffect}
                   onChange={(checked) => setSettings((prev: SettingsType) => ({ ...prev, glassEffect: checked }))}
+                  disabled={settings.useDefaultAppearance}
                 />
                 
                 <Select

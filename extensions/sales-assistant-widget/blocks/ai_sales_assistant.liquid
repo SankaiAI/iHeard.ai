@@ -374,11 +374,25 @@ This creates a floating chat widget that can be added to any page
     messageContent.style.boxSizing = 'border-box';
     
     if (sender === 'user') {
-      messageContent.style.backgroundColor = widgetSettings.primaryColor;
-      messageContent.style.color = 'white';
+      if (widgetSettings.useDefaultAppearance) {
+        messageContent.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
+        messageContent.style.backdropFilter = 'blur(8px)';
+        messageContent.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+        messageContent.style.color = 'white';
+      } else {
+        messageContent.style.backgroundColor = widgetSettings.primaryColor;
+        messageContent.style.color = 'white';
+      }
     } else {
-      messageContent.style.backgroundColor = '#f1f1f1';
-      messageContent.style.color = '#333';
+      if (widgetSettings.useDefaultAppearance) {
+        messageContent.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        messageContent.style.backdropFilter = 'blur(6px)';
+        messageContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        messageContent.style.color = 'white';
+      } else {
+        messageContent.style.backgroundColor = '#f1f1f1';
+        messageContent.style.color = '#333';
+      }
     }
     
     messageDiv.appendChild(messageContent);
@@ -663,6 +677,14 @@ This creates a floating chat widget that can be added to any page
       loadingDiv.id = 'ai-loading';
       loadingDiv.className = 'ai-loading';
       
+      // Apply default appearance styling if enabled
+      if (widgetSettings.useDefaultAppearance) {
+        loadingDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
+        loadingDiv.style.backdropFilter = 'blur(6px)';
+        loadingDiv.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        loadingDiv.style.color = 'white';
+      }
+      
       const loadingDots = document.createElement('div');
       loadingDots.className = 'loading-dots';
       
@@ -823,6 +845,11 @@ This creates a floating chat widget that can be added to any page
     }
     
     function getCombinedStyle() {
+      // Use default dark appearance if enabled
+      if (widgetSettings.useDefaultAppearance) {
+        return getUnifiedDefaultAppearanceStyle();
+      }
+      
       const baseBackground = getWidgetBackgroundStyle();
       let style = `background: ${baseBackground};`;
       
@@ -832,6 +859,32 @@ This creates a floating chat widget that can be added to any page
       }
       
       return style;
+    }
+    
+    function getUnifiedDefaultAppearanceStyle() {
+      return `background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(12px); color: white;`;
+    }
+    
+    
+    function getChatWindowStyle() {
+      if (widgetSettings.useDefaultAppearance) {
+        return getUnifiedDefaultAppearanceStyle();
+      }
+      return `background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}`;
+    }
+    
+    function getChatMessagesContainerStyle() {
+      if (widgetSettings.useDefaultAppearance) {
+        return getUnifiedDefaultAppearanceStyle();
+      }
+      return `background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}`;
+    }
+    
+    function getChatMessagesStyle() {
+      if (widgetSettings.useDefaultAppearance) {
+        return `background: transparent; color: white;`;
+      }
+      return `background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}`;
     }
     
 
@@ -851,7 +904,7 @@ This creates a floating chat widget that can be added to any page
         </button>
         
         <!-- Chat Window -->
-        <div id="ai-chat-window" class="ai-chat-window" style="display: none; background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}">
+        <div id="ai-chat-window" class="ai-chat-window" style="display: none; ${getChatWindowStyle()}">
           <!-- Chat Header -->
           <div class="ai-chat-header" style="${getCombinedStyle()}">
             <h3>${widgetSettings.chatTitle}</h3>
@@ -864,13 +917,13 @@ This creates a floating chat widget that can be added to any page
           <!-- Fireworks Animation Overlay -->
           <div id="ai-fireworks-animation" style="display:none;"></div>
           <!-- Chat Messages Container -->
-          <div class="ai-chat-messages-container" style="background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'};">
+          <div class="ai-chat-messages-container" style="${getChatMessagesContainerStyle()}">
             <!-- Chat Messages -->
-            <div id="ai-chat-messages" class="ai-chat-messages" style="background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'};">
+            <div id="ai-chat-messages" class="ai-chat-messages" style="${getChatMessagesStyle()}">
               <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
                 <div class="ai-welcome-container" style="background: transparent; padding: 0;">
                   <div class="ai-welcome-header" style="margin-bottom: 20px;">
-                    <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333'};">${widgetSettings.welcomeMessage}</h3>
+                    <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.useDefaultAppearance ? 'white' : (widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333')};">${widgetSettings.welcomeMessage}</h3>
                   </div>
                   <!-- All suggestion sections removed -->
                 </div>
@@ -886,11 +939,11 @@ This creates a floating chat widget that can be added to any page
               type="text" 
               id="ai-chat-input-field"
               placeholder="${widgetSettings.inputPlaceholder}"
-              style="background: white; color: black;"
+              style="background: ${widgetSettings.useDefaultAppearance ? 'rgba(255, 255, 255, 0.1)' : 'white'}; color: ${widgetSettings.useDefaultAppearance ? 'white' : 'black'}; border: ${widgetSettings.useDefaultAppearance ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid #ddd'};"
             />
             <button id="ai-chat-send-btn">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="${widgetSettings.useDefaultAppearance ? 'white' : widgetSettings.primaryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
@@ -912,6 +965,14 @@ This creates a floating chat widget that can be added to any page
         messagesContainer.classList.add('welcome-active');
       }
     }, 50);
+  }
+  
+  // Define border color function before CSS
+  function getChatInputBorderColor() {
+    if (widgetSettings.useDefaultAppearance) {
+      return 'transparent';
+    }
+    return widgetSettings.chatBackgroundColor === 'black' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
   }
   
   // Add CSS styles for the widget
@@ -1013,7 +1074,8 @@ This creates a floating chat widget that can be added to any page
   right: 0;
   width: 350px;
   height: 500px;
-  background: white;
+  background: ${widgetSettings.useDefaultAppearance ? 'rgba(0, 0, 0, 0.2)' : 'white'};
+  ${widgetSettings.useDefaultAppearance ? 'backdrop-filter: blur(12px);' : ''}
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: none;
@@ -1058,7 +1120,9 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-header {
-  background: var(--ai-primary-color, #ee5cee);
+  background: ${widgetSettings.useDefaultAppearance ? 'rgba(0, 0, 0, 0.2)' : 'var(--ai-primary-color, #ee5cee)'};
+  ${widgetSettings.useDefaultAppearance ? 'backdrop-filter: blur(12px);' : ''}
+  ${widgetSettings.useDefaultAppearance ? 'border-bottom: none;' : ''}
   color: white;
   padding: 16px;
   display: flex;
@@ -1100,7 +1164,7 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-messages-container {
   grid-area: messages !important;
   overflow: hidden;
-  background: #fafafa;
+  background: ${widgetSettings.useDefaultAppearance ? 'transparent' : '#fafafa'};
   box-sizing: border-box;
   height: 100%;
   width: 100%;
@@ -1266,9 +1330,9 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-input {
   padding: 15px;
-  border-top: 1px solid rgba(255,255,255,0.2);
+  border-top: 1px solid ${getChatInputBorderColor()};
+  position: relative;
   display: flex;
-  gap: 10px;
   align-items: center;
   z-index: 10; /* Keep above other content */
   height: 70px !important; /* Fixed height to prevent shifting */
@@ -1278,12 +1342,13 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input input {
-  flex: 1;
-  padding: 10px 12px;
+  width: 100%;
+  padding: 10px 50px 10px 12px; /* Add right padding for button */
   border: 1px solid #ddd;
   border-radius: 20px;
   font-size: 14px;
   outline: none;
+  box-sizing: border-box;
 }
 
 .ai-chat-input input:focus {
@@ -1291,22 +1356,25 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input button {
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.4);
-  border-radius: 4px;
-  width: 40px;
-  height: 40px;
+  position: absolute;
+  right: 20px; /* Position inside the input */
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-color 0.2s;
-  color: white;
+  color: ${widgetSettings.useDefaultAppearance ? 'white' : 'var(--ai-primary-color, #ee5cee)'};
 }
 
 .ai-chat-input button:hover {
-  background: rgba(255,255,255,0.3);
-  border-color: rgba(255,255,255,0.6);
+  background: ${widgetSettings.useDefaultAppearance ? 'rgba(255,255,255,0.1)' : 'rgba(238, 92, 238, 0.1)'};
 }
 
 /* Typewriter Animation for Welcome Message */
@@ -1526,7 +1594,8 @@ This creates a floating chat widget that can be added to any page
     right: 0 !important;
     bottom: 0 !important;
     width: 100vw !important;
-    height: 100vh !important; /* Use 100vh for full viewport height */
+    height: 100vh !important;
+    height: 100dvh !important; /* Use dynamic viewport height if supported */
     border-radius: 0 !important;
     z-index: 99999 !important;
     max-height: none !important;
@@ -1544,12 +1613,12 @@ This creates a floating chat widget that can be added to any page
     width: 100vw !important;
     z-index: 10001 !important;
     border-radius: 0 !important;
-    height: 60px !important;
-    padding: 10px !important;
-    border-top: 1px solid #e5e5e5 !important;
+    height: auto !important;
+    min-height: 60px !important;
+    padding: max(10px, env(safe-area-inset-bottom, 0)) 10px 10px 10px !important;
+    border-top: ${widgetSettings.useDefaultAppearance ? 'none' : '1px solid ' + (widgetSettings.chatBackgroundColor === 'black' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)')} !important;
     display: flex !important;
     align-items: center !important;
-    gap: 12px !important;
     box-sizing: border-box !important;
   }
   .ai-chat-messages-container {
@@ -1558,7 +1627,7 @@ This creates a floating chat widget that can be added to any page
     overflow: hidden !important; /* No scroll on container */
     display: flex !important;
     flex-direction: column !important;
-    padding-bottom: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
     position: relative !important;
     height: 100%;
     max-height: 100%;
@@ -1571,7 +1640,7 @@ This creates a floating chat widget that can be added to any page
     overflow-y: auto !important; /* Only message section scrolls */
     -webkit-overflow-scrolling: touch !important;
     box-sizing: border-box !important;
-    padding: 16px 10px 70px 10px !important;
+    padding: 16px 10px calc(70px + max(env(safe-area-inset-bottom, 0), 10px)) 10px !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -1592,6 +1661,35 @@ This creates a floating chat widget that can be added to any page
   }
   .ai-chat-input input {
     font-size: 16px !important;
+    width: 100% !important;
+    padding: 10px 50px 10px 12px !important;
+    box-sizing: border-box !important;
+  }
+  .ai-chat-input button {
+    position: absolute !important;
+    right: 15px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    width: 36px !important;
+    height: 36px !important;
+  }
+  
+  /* Ensure input is always visible and properly rendered */
+  .ai-chat-input {
+    -webkit-transform: translateZ(0) !important;
+    transform: translateZ(0) !important;
+    -webkit-backface-visibility: hidden !important;
+    backface-visibility: hidden !important;
+  }
+  
+  /* Force remove ALL borders on mobile input */
+  .ai-chat-input {
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    outline: none !important;
   }
 }
 

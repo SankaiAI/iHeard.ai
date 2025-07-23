@@ -23,6 +23,7 @@ const DEFAULT_SETTINGS = {
   workflowType: "default",
   customWebhookUrl: "",
   chatBackgroundColor: "white",
+  useDefaultAppearance: false,
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
