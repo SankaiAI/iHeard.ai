@@ -955,7 +955,7 @@ This creates a floating chat widget that can be added to any page
             
             <!-- Chat Input -->
             <div class="ai-chat-input-container">
-              <div class="ai-chat-input" style="${widgetSettings.useDefaultAppearance ? '' : getCombinedStyle()}">
+              <div class="ai-chat-input" id="ai-chat-input" style="${widgetSettings.useDefaultAppearance ? '' : getCombinedStyle()}">
                 <input 
                   type="text" 
                   id="ai-chat-input-field"
@@ -968,6 +968,28 @@ This creates a floating chat widget that can be added to any page
                   </svg>
                 </button>
               </div>
+              
+              <!-- Voice Wave Animation (Hidden by default) -->
+              <div class="ai-voice-wave-container" id="ai-voice-wave-container" style="display: none;">
+                <div class="ai-voice-wave-bars">
+                  <div class="wave-bar" style="animation-delay: 0s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.1s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.2s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.3s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.4s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.2s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.1s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.1s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.3s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.2s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.4s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0.1s;"></div>
+                  <div class="wave-bar" style="animation-delay: 0s;"></div>
+                </div>
+                <div class="ai-voice-status-text">I'm hearing</div>
+              </div>
+              
               <div class="ai-powered-by">
                 Powered by iHeard.ai
               </div>
@@ -1507,6 +1529,88 @@ This creates a floating chat widget that can be added to any page
   box-sizing: border-box !important;
   border-radius: 25px; /* Rounded input area */
   padding: 0; /* Remove padding, it's on container now */
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Voice Wave Animation Styles */
+.ai-voice-wave-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  height: 50px !important;
+  box-sizing: border-box !important;
+  border-radius: 25px;
+  padding: 0;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: scale(0.9);
+  background: transparent;
+}
+
+.ai-voice-wave-container.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ai-voice-wave-bars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 24px;
+  margin-bottom: 4px;
+}
+
+.wave-bar {
+  width: 3px;
+  height: 8px;
+  background: ${widgetSettings.useDefaultAppearance ? 'white' : 'var(--ai-primary-color, #ee5cee)'};
+  border-radius: 2px;
+  opacity: 0.6;
+  transition: height 0.1s ease, opacity 0.2s ease;
+  /* Remove default animation - bars stay static until speech detected */
+}
+
+.wave-bar.speaking {
+  animation: wave-speaking 0.3s ease-in-out infinite;
+  opacity: 1;
+}
+
+.wave-bar.idle {
+  /* Very subtle idle state - no animation by default */
+  opacity: 0.4;
+}
+
+.ai-voice-status-text {
+  font-size: 12px;
+  color: ${widgetSettings.useDefaultAppearance ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.7)'};
+  font-weight: 500;
+  text-align: center;
+}
+
+@keyframes wave-pulse {
+  0%, 100% {
+    height: 8px;
+    opacity: 0.6;
+  }
+  50% {
+    height: 16px;
+    opacity: 0.9;
+  }
+}
+
+@keyframes wave-speaking {
+  0%, 100% {
+    height: 8px;
+    opacity: 0.8;
+  }
+  50% {
+    height: 20px;
+    opacity: 1;
+  }
 }
 
 .ai-chat-input input {
@@ -2066,6 +2170,316 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
   
   // Voice Call Functions
   let isCallActive = false;
+  let isVoiceWaveActive = false;
+  let audioContext = null;
+  let analyser = null;
+  let microphone = null;
+  let dataArray = null;
+  let animationFrame = null;
+  
+  // Enhanced Voice Detection Variables
+  let frequencyData = null;
+  let backgroundNoise = 0;
+  let speechHistory = [];
+  let calibrationSamples = [];
+  let isCalibrated = false;
+  const SPEECH_FREQ_MIN = 85;  // Human speech starts around 85Hz
+  const SPEECH_FREQ_MAX = 255; // Most important speech frequencies up to 4kHz (at 256 samples)
+  const CALIBRATION_TIME = 2000; // 2 seconds to calibrate background noise
+  const SPEECH_HISTORY_SIZE = 5; // Track last 5 samples for pattern detection
+  
+  // Show voice wave animation
+  function showVoiceWave() {
+    const inputContainer = document.getElementById('ai-chat-input');
+    const waveContainer = document.getElementById('ai-voice-wave-container');
+    
+    if (inputContainer && waveContainer) {
+      // Hide input with fade out
+      inputContainer.style.opacity = '0';
+      inputContainer.style.transform = 'scale(0.9)';
+      
+      setTimeout(() => {
+        inputContainer.style.display = 'none';
+        waveContainer.style.display = 'flex';
+        
+        // Show wave with fade in
+        setTimeout(() => {
+          waveContainer.classList.add('active');
+          isVoiceWaveActive = true;
+          
+          // Initialize all wave bars to idle state
+          const waveBars = document.querySelectorAll('.wave-bar');
+          waveBars.forEach(bar => {
+            bar.classList.add('idle');
+            bar.style.height = '8px';
+          });
+        }, 50);
+      }, 300);
+    }
+  }
+  
+  // Hide voice wave animation
+  function hideVoiceWave() {
+    const inputContainer = document.getElementById('ai-chat-input');
+    const waveContainer = document.getElementById('ai-voice-wave-container');
+    
+    if (inputContainer && waveContainer) {
+      // Hide wave with fade out
+      waveContainer.classList.remove('active');
+      
+      setTimeout(() => {
+        waveContainer.style.display = 'none';
+        inputContainer.style.display = 'flex';
+        
+        // Show input with fade in
+        setTimeout(() => {
+          inputContainer.style.opacity = '1';
+          inputContainer.style.transform = 'scale(1)';
+          isVoiceWaveActive = false;
+        }, 50);
+      }, 300);
+    }
+  }
+  
+  // Initialize microphone and audio analysis
+  async function initializeMicrophone() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      analyser = audioContext.createAnalyser();
+      microphone = audioContext.createMediaStreamSource(stream);
+      
+      // Higher resolution for better frequency analysis
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.8;
+      
+      const bufferLength = analyser.frequencyBinCount;
+      dataArray = new Uint8Array(bufferLength);
+      frequencyData = new Uint8Array(bufferLength);
+      
+      microphone.connect(analyser);
+      
+      // Start background noise calibration
+      setTimeout(() => {
+        startBackgroundCalibration();
+      }, 500);
+      
+      console.log('🎤 Enhanced microphone initialized successfully');
+      return true;
+    } catch (error) {
+      console.error('🎤 Failed to initialize microphone:', error);
+      return false;
+    }
+  }
+  
+  // Background noise calibration
+  function startBackgroundCalibration() {
+    calibrationSamples = [];
+    isCalibrated = false;
+    
+    console.log('🎤 Calibrating background noise... Please stay quiet for 2 seconds');
+    
+    const calibrateInterval = setInterval(() => {
+      if (!analyser || !dataArray) {
+        clearInterval(calibrateInterval);
+        return;
+      }
+      
+      analyser.getByteFrequencyData(dataArray);
+      
+      // Calculate overall volume for calibration
+      let sum = 0;
+      for (let i = 0; i < dataArray.length; i++) {
+        sum += dataArray[i];
+      }
+      calibrationSamples.push(sum / dataArray.length);
+      
+      if (calibrationSamples.length >= 20) { // 20 samples over ~2 seconds
+        // Calculate average background noise
+        backgroundNoise = calibrationSamples.reduce((a, b) => a + b, 0) / calibrationSamples.length;
+        isCalibrated = true;
+        clearInterval(calibrateInterval);
+        
+        console.log(`🎤 Background noise calibrated: ${backgroundNoise.toFixed(2)}`);
+        
+        // Update status to show ready state
+        const statusText = document.querySelector('.ai-voice-status-text');
+        if (statusText) {
+          statusText.textContent = "I'm hearing";
+        }
+      }
+    }, 100);
+    
+    // Timeout after calibration time
+    setTimeout(() => {
+      if (!isCalibrated) {
+        clearInterval(calibrateInterval);
+        backgroundNoise = 15; // Default fallback
+        isCalibrated = true;
+        console.log('🎤 Using default background noise level');
+      }
+    }, CALIBRATION_TIME);
+  }
+  
+  // Enhanced speech detection
+  function detectSpeech() {
+    if (!analyser || !dataArray || !frequencyData || !isCalibrated) {
+      return false;
+    }
+    
+    analyser.getByteFrequencyData(frequencyData);
+    
+    // Focus on speech frequency range (300Hz - 3400Hz roughly maps to indices 85-255 at 512 FFT)
+    let speechEnergy = 0;
+    let totalEnergy = 0;
+    
+    for (let i = SPEECH_FREQ_MIN; i < SPEECH_FREQ_MAX; i++) {
+      speechEnergy += frequencyData[i];
+    }
+    
+    for (let i = 0; i < frequencyData.length; i++) {
+      totalEnergy += frequencyData[i];
+    }
+    
+    const speechRatio = speechEnergy / totalEnergy;
+    const avgSpeechLevel = speechEnergy / (SPEECH_FREQ_MAX - SPEECH_FREQ_MIN);
+    
+    // Dynamic threshold based on background noise (more conservative)
+    const speechThreshold = backgroundNoise + 20; // Increased from 10 to 20
+    const speechRatioThreshold = 0.4; // Increased from 0.3 to 0.4 - speech should be at least 40% of total energy
+    
+    // Check multiple conditions for better accuracy (stricter thresholds)
+    const hasEnoughEnergy = avgSpeechLevel > speechThreshold;
+    const hasGoodSpeechRatio = speechRatio > speechRatioThreshold;
+    const isAboveNoise = avgSpeechLevel > backgroundNoise * 2.5; // Increased from 1.5 to 2.5
+    
+    const isSpeaking = hasEnoughEnergy && hasGoodSpeechRatio && isAboveNoise;
+    
+    // Add to history for pattern detection
+    speechHistory.push({
+      isSpeaking: isSpeaking,
+      energy: avgSpeechLevel,
+      ratio: speechRatio,
+      timestamp: Date.now()
+    });
+    
+    // Keep only recent history
+    if (speechHistory.length > SPEECH_HISTORY_SIZE) {
+      speechHistory = speechHistory.slice(-SPEECH_HISTORY_SIZE);
+    }
+    
+    return isSpeaking;
+  }
+  
+  // Pattern-based speech validation (more strict)
+  function validateSpeechPattern() {
+    if (speechHistory.length < 4) return false;
+    
+    const recentSpeech = speechHistory.slice(-4);
+    const speakingCount = recentSpeech.filter(s => s.isSpeaking).length;
+    
+    // Require at least 3 out of 4 recent samples to be speech
+    // This further reduces false positives
+    return speakingCount >= 3;
+  }
+  
+  // Stop microphone
+  function stopMicrophone() {
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+    
+    if (microphone) {
+      microphone.disconnect();
+      microphone = null;
+    }
+    
+    if (audioContext) {
+      audioContext.close();
+      audioContext = null;
+    }
+    
+    // Reset all detection variables
+    analyser = null;
+    dataArray = null;
+    frequencyData = null;
+    backgroundNoise = 0;
+    speechHistory = [];
+    calibrationSamples = [];
+    isCalibrated = false;
+    
+    console.log('🎤 Enhanced microphone stopped');
+  }
+  
+  // Enhanced audio analysis with speech detection
+  function analyzeAudio() {
+    if (!analyser || !dataArray || !isVoiceWaveActive) return;
+    
+    // Use enhanced speech detection
+    const isSpeakingBasic = detectSpeech();
+    const isSpeakingValidated = validateSpeechPattern();
+    
+    // Final decision: require pattern validation for more accuracy
+    const isSpeaking = isSpeakingValidated;
+    
+    // Get wave bars
+    const waveBars = document.querySelectorAll('.wave-bar');
+    
+    if (isSpeaking) {
+      // Get frequency data for wave animation
+      analyser.getByteFrequencyData(frequencyData);
+      
+      // Animate wave bars based on speech frequencies
+      waveBars.forEach((bar, index) => {
+        bar.classList.add('speaking');
+        
+        // Map each bar to different frequency ranges for more natural animation
+        const freqIndex = SPEECH_FREQ_MIN + (index * (SPEECH_FREQ_MAX - SPEECH_FREQ_MIN) / waveBars.length);
+        const freqValue = frequencyData[Math.floor(freqIndex)] || 0;
+        
+        // Create wave effect: bars in center react more to speech
+        const centerDistance = Math.abs(index - waveBars.length / 2);
+        const centerBoost = Math.max(0, 1 - centerDistance / (waveBars.length / 2));
+        
+        // Calculate height based on frequency data and position
+        const baseHeight = 8;
+        const maxHeight = 24;
+        const heightMultiplier = (freqValue / 255) * centerBoost * 2;
+        const newHeight = baseHeight + (heightMultiplier * (maxHeight - baseHeight));
+        
+        bar.style.height = Math.min(Math.max(newHeight, baseHeight), maxHeight) + 'px';
+      });
+    } else {
+      // Reset to idle state - completely static
+      waveBars.forEach((bar) => {
+        bar.classList.remove('speaking');
+        bar.classList.add('idle');
+        bar.style.height = '8px'; // Reset to base height, no animation
+      });
+    }
+    
+    // Update status text with more context
+    const statusText = document.querySelector('.ai-voice-status-text');
+    if (statusText) {
+      if (!isCalibrated) {
+        statusText.textContent = 'Calibrating...';
+      } else if (isSpeaking) {
+        statusText.textContent = 'I heard you';
+      } else {
+        statusText.textContent = "I'm hearing";
+      }
+    }
+    
+    animationFrame = requestAnimationFrame(analyzeAudio);
+  }
   
   function updateCallStatus(status, text) {
     const statusContainer = document.getElementById('ai-call-status');
@@ -2157,6 +2571,18 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
     updateCallStatus('connecting', 'Connecting');
     updateCallButton(true); // Change to End button
     
+    // Initialize microphone and show wave animation
+    const micInitialized = await initializeMicrophone();
+    if (micInitialized) {
+      showVoiceWave();
+      // Start audio analysis for wave animation
+      analyzeAudio();
+    } else {
+      // If microphone fails, still show wave but without audio analysis
+      showVoiceWave();
+      console.warn('🎤 Microphone not available, showing static wave animation');
+    }
+    
     const isConnected = await checkVoiceAPIConnection();
     
     if (!isConnected) {
@@ -2235,6 +2661,10 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
       // Always reset the UI regardless of API call success
       hideCallStatus();
       updateCallButton(false);
+      
+      // Stop microphone and hide wave animation
+      stopMicrophone();
+      hideVoiceWave();
     }
   }
   
