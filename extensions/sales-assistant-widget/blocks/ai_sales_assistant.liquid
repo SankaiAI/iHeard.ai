@@ -919,12 +919,18 @@ This creates a floating chat widget that can be added to any page
                     </button>
                     <h3>${widgetSettings.chatTitle}</h3>
                   </div>
-                  <button class="ai-chat-call-btn" id="ai-chat-call-btn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                    Call
-                  </button>
+                  <div class="ai-call-section">
+                    <div class="ai-call-status" id="ai-call-status" style="display: none;">
+                      <div class="status-indicator connecting" id="status-indicator"></div>
+                      <span class="status-text" id="status-text">Connecting</span>
+                    </div>
+                    <button class="ai-chat-call-btn" id="ai-chat-call-btn">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      Call
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1210,6 +1216,62 @@ This creates a floating chat widget that can be added to any page
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.ai-call-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-call-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: white;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  position: relative;
+}
+
+.status-indicator.connecting {
+  background: orange;
+  animation: pulse 2s infinite;
+}
+
+.status-indicator.connected {
+  background: #4CAF50;
+}
+
+.status-indicator.failed {
+  background: #f44336;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.7);
+  }
+  
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(255, 165, 0, 0);
+  }
+  
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(255, 165, 0, 0);
+  }
+}
+
+.status-text {
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .ai-chat-call-btn {
@@ -1877,8 +1939,7 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
         e.preventDefault();
         e.stopPropagation();
         console.log('📞 AI Widget: Call button clicked');
-        // You can customize this behavior - for now, it could open a contact form, phone dialer, or booking system
-        alert('Call functionality - customize this to your needs!');
+        handleVoiceCall();
       };
       
       callBtn.addEventListener('click', window.aiWidgetHandlers.callHandler);
@@ -2002,6 +2063,180 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
       setTimeout(() => indicator.remove(), 5000);
     }
   };
+  
+  // Voice Call Functions
+  let isCallActive = false;
+  
+  function updateCallStatus(status, text) {
+    const statusContainer = document.getElementById('ai-call-status');
+    const statusIndicator = document.getElementById('status-indicator');
+    const statusText = document.getElementById('status-text');
+    
+    if (statusContainer && statusIndicator && statusText) {
+      // Show the status container
+      statusContainer.style.display = 'flex';
+      
+      // Remove all status classes
+      statusIndicator.classList.remove('connecting', 'connected', 'failed');
+      // Add new status class
+      statusIndicator.classList.add(status);
+      // Update text
+      statusText.textContent = text;
+      
+      console.log(`🔊 Voice status updated: ${status} - ${text}`);
+    }
+  }
+  
+  function updateCallButton(isActive) {
+    const callBtn = document.getElementById('ai-chat-call-btn');
+    const callSvg = callBtn.querySelector('svg');
+    const callText = callBtn.querySelector('svg').nextSibling;
+    
+    if (isActive) {
+      // Change to End button (red background, end call icon)
+      callBtn.style.background = 'rgba(244, 67, 54, 0.9)';
+      callSvg.innerHTML = `<path d="M22 4.6c0-1.1-.9-2-2-2h-3.8c-.8 0-1.5.7-1.5 1.5 0 .4.2.8.4 1.1l1.2 2.4c.2.4.2.8 0 1.2l-3.5 3.5c-.4.4-.4 1 0 1.4s1 .4 1.4 0l3.5-3.5c.4-.2.8-.2 1.2 0l2.4 1.2c.3.2.7.4 1.1.4.8 0 1.5-.7 1.5-1.5V4.6z" stroke="white" stroke-width="2" fill="white"/>`;
+      callText.textContent = ' End';
+      isCallActive = true;
+    } else {
+      // Change back to Call button (original blue background, phone icon)
+      callBtn.style.background = 'rgba(74, 144, 226, 0.9)';
+      callSvg.innerHTML = `<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      callText.textContent = ' Call';
+      isCallActive = false;
+    }
+  }
+  
+  function hideCallStatus() {
+    const statusContainer = document.getElementById('ai-call-status');
+    if (statusContainer) {
+      statusContainer.style.display = 'none';
+    }
+  }
+  
+  async function checkVoiceAPIConnection() {
+    try {
+      // Replace this URL with your voice service endpoint
+      const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/status';
+      
+      const response = await fetch(voiceServiceUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        timeout: 5000 // 5 second timeout
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.status === 'available') {
+          updateCallStatus('connected', 'Connected');
+          return true;
+        }
+      }
+      
+      // If we get here, service is not available
+      updateCallStatus('connecting', 'Connecting');
+      return false;
+      
+    } catch (error) {
+      console.error('Voice API connection check failed:', error);
+      updateCallStatus('connecting', 'Connecting');
+      return false;
+    }
+  }
+  
+  async function handleVoiceCall() {
+    // If call is already active, end the call
+    if (isCallActive) {
+      await endVoiceCall();
+      return;
+    }
+    
+    // Show connecting status immediately when call button is clicked
+    updateCallStatus('connecting', 'Connecting');
+    updateCallButton(true); // Change to End button
+    
+    const isConnected = await checkVoiceAPIConnection();
+    
+    if (!isConnected) {
+      // Show busy message - user must manually click End to reset status
+      alert('Agent is busy now, please try again later.');
+      // Do not automatically reset the status and button - user must manually click End
+      return;
+    }
+    
+    try {
+      // Replace this URL with your voice service endpoint
+      const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/start';
+      
+      const response = await fetch(voiceServiceUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          shopDomain: '{{ shop.myshopify_domain }}',
+          context: {
+            page: window.location.pathname,
+            productId: getProductIdFromPage(),
+            conversationHistory: conversationHistory
+          }
+        })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('🔊 Voice call started:', data);
+        
+        // You would typically redirect to a voice interface or start WebRTC here
+        // For now, just show a success message
+        updateCallStatus('connected', 'In Call');
+        
+        // TODO: Implement actual voice interface
+        // This could involve:
+        // 1. Opening a new window/modal with voice interface
+        // 2. Starting WebRTC connection
+        // 3. Handling audio streaming
+        
+      } else {
+        throw new Error('Failed to start voice call');
+      }
+      
+    } catch (error) {
+      console.error('Voice call failed:', error);
+      alert('Agent is busy now, please try again later.');
+      // Do not automatically reset the status and button - user must manually click End
+    }
+  }
+  
+  async function endVoiceCall() {
+    try {
+      // If there was an active call, notify the voice service to end it
+      if (isCallActive) {
+        // Replace this URL with your voice service endpoint
+        const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/end';
+        
+        await fetch(voiceServiceUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            shopDomain: '{{ shop.myshopify_domain }}'
+          })
+        });
+        
+        console.log('🔊 Voice call ended');
+      }
+    } catch (error) {
+      console.error('Error ending voice call:', error);
+    } finally {
+      // Always reset the UI regardless of API call success
+      hideCallStatus();
+      updateCallButton(false);
+    }
+  }
   
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
