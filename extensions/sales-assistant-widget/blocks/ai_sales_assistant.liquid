@@ -875,14 +875,14 @@ This creates a floating chat widget that can be added to any page
     
     function getChatMessagesContainerStyle() {
       if (widgetSettings.useDefaultAppearance) {
-        return getUnifiedDefaultAppearanceStyle();
+        return `color: white;`; // Let CSS handle background
       }
       return `background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}`;
     }
     
     function getChatMessagesStyle() {
       if (widgetSettings.useDefaultAppearance) {
-        return `background: transparent; color: white;`;
+        return `color: white;`; // Let CSS handle background
       }
       return `background: ${widgetSettings.chatBackgroundColor === 'black' ? '#1a1a1a' : 'white'}; color: ${widgetSettings.chatBackgroundColor === 'black' ? 'white' : 'black'}`;
     }
@@ -904,60 +904,68 @@ This creates a floating chat widget that can be added to any page
         </button>
         
         <!-- Chat Window -->
-        <div id="ai-chat-window" class="ai-chat-window" style="display: none; ${getChatWindowStyle()}">
-          <!-- Chat Header -->
-          <div class="ai-chat-header" style="${getCombinedStyle()}">
-            <div class="ai-chat-header-rect">
-              <div class="ai-chat-header-content">
-                <div class="ai-chat-title-group">
-                  <button class="ai-chat-close" id="ai-chat-close-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 9l-7 7-7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <div id="ai-chat-window" class="ai-chat-window" style="display: none;">
+          <!-- Chat Content Container -->
+          <div class="ai-chat-content-container" style="${widgetSettings.useDefaultAppearance ? 'background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(12px);' : getChatWindowStyle()}">
+            <!-- Chat Header -->
+            <div class="ai-chat-header" style="${getCombinedStyle()}">
+              <div class="ai-chat-header-rect">
+                <div class="ai-chat-header-content">
+                  <div class="ai-chat-title-group">
+                    <button class="ai-chat-close" id="ai-chat-close-btn">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 9l-7 7-7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </button>
+                    <h3>${widgetSettings.chatTitle}</h3>
+                  </div>
+                  <button class="ai-chat-call-btn" id="ai-chat-call-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
+                    Call
                   </button>
-                  <h3>${widgetSettings.chatTitle}</h3>
                 </div>
-                <button class="ai-chat-call-btn" id="ai-chat-call-btn">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </div>
+            </div>
+            <!-- Fireworks Animation Overlay -->
+            <div id="ai-fireworks-animation" style="display:none;"></div>
+            <!-- Chat Messages Container -->
+            <div class="ai-chat-messages-container" style="${getChatMessagesContainerStyle()}">
+              <!-- Chat Messages -->
+              <div id="ai-chat-messages" class="ai-chat-messages" style="${getChatMessagesStyle()}">
+                <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
+                  <div class="ai-welcome-container" style="background: transparent; padding: 0;">
+                    <div class="ai-welcome-header" style="margin-bottom: 20px;">
+                      <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.useDefaultAppearance ? 'white' : (widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333')};">${widgetSettings.welcomeMessage}</h3>
+                    </div>
+                    <!-- All suggestion sections removed -->
+                  </div>
+                </div>
+                
+
+              </div>
+            </div>
+            
+            <!-- Chat Input -->
+            <div class="ai-chat-input-container">
+              <div class="ai-chat-input" style="${widgetSettings.useDefaultAppearance ? '' : getCombinedStyle()}">
+                <input 
+                  type="text" 
+                  id="ai-chat-input-field"
+                  placeholder="${widgetSettings.inputPlaceholder}"
+                  style="background: ${widgetSettings.useDefaultAppearance ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.85)'}; color: ${widgetSettings.useDefaultAppearance ? 'white' : 'black'}; border: none; backdrop-filter: blur(4px); transition: all 0.2s ease;"
+                />
+                <button id="ai-chat-send-btn">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="${widgetSettings.useDefaultAppearance ? 'white' : widgetSettings.primaryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
-                  Call
                 </button>
               </div>
-            </div>
-          </div>
-          <!-- Fireworks Animation Overlay -->
-          <div id="ai-fireworks-animation" style="display:none;"></div>
-          <!-- Chat Messages Container -->
-          <div class="ai-chat-messages-container" style="${getChatMessagesContainerStyle()}">
-            <!-- Chat Messages -->
-            <div id="ai-chat-messages" class="ai-chat-messages" style="${getChatMessagesStyle()}">
-              <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
-                <div class="ai-welcome-container" style="background: transparent; padding: 0;">
-                  <div class="ai-welcome-header" style="margin-bottom: 20px;">
-                    <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.useDefaultAppearance ? 'white' : (widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333')};">${widgetSettings.welcomeMessage}</h3>
-                  </div>
-                  <!-- All suggestion sections removed -->
-                </div>
+              <div class="ai-powered-by">
+                Powered by iHeard.ai
               </div>
-              
-
             </div>
-          </div>
-          
-          <!-- Chat Input -->
-          <div class="ai-chat-input" style="${getCombinedStyle()}">
-            <input 
-              type="text" 
-              id="ai-chat-input-field"
-              placeholder="${widgetSettings.inputPlaceholder}"
-              style="background: ${widgetSettings.useDefaultAppearance ? 'rgba(255, 255, 255, 0.3)' : 'rgba(255, 255, 255, 0.85)'}; color: ${widgetSettings.useDefaultAppearance ? 'white' : 'black'}; border: ${widgetSettings.useDefaultAppearance ? '1px solid rgba(255, 255, 255, 0.4)' : '1px solid #ddd'}; backdrop-filter: blur(4px); transition: all 0.2s ease;"
-            />
-            <button id="ai-chat-send-btn">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="${widgetSettings.useDefaultAppearance ? 'white' : widgetSettings.primaryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
           </div>
         </div>
       </div>
@@ -1090,16 +1098,9 @@ This creates a floating chat widget that can be added to any page
   right: 0;
   width: 420px;
   height: 600px;
-  background: ${widgetSettings.useDefaultAppearance ? 'rgba(0, 0, 0, 0.2)' : 'white'};
-  ${widgetSettings.useDefaultAppearance ? 'backdrop-filter: blur(12px);' : ''}
   border-radius: 25px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: none;
-  grid-template-rows: 70px 1fr 70px;
-  grid-template-areas: 
-    "header"
-    "messages"
-    "input";
   overflow-x: hidden;
   overflow-y: visible;
   max-height: 600px;
@@ -1107,6 +1108,19 @@ This creates a floating chat widget that can be added to any page
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.ai-chat-content-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 25px;
+  display: grid;
+  grid-template-rows: 70px 1fr auto;
+  grid-template-areas: 
+    "header"
+    "messages"
+    "input";
+  overflow: hidden;
 }
 
 .ai-chat-window.ai-chat-open {
@@ -1248,15 +1262,16 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-messages-container {
   grid-area: messages !important;
   overflow: hidden;
-  background: ${widgetSettings.useDefaultAppearance ? 'transparent' : '#fafafa'};
+  background: transparent;
   box-sizing: border-box;
   height: 100%;
   width: 100%;
+  position: relative;
+  z-index: 2;
 }
 
 .ai-chat-messages {
-  padding: 16px 15px 15px 15px;
-  padding-bottom: 15px; /* Consistent padding */
+  padding: 0 15px 20px 15px; /* Add bottom padding to prevent scrolling behind input */
   overflow-y: auto !important; /* Show scrollbar when content overflows */
   overflow-x: hidden !important;
   display: flex;
@@ -1267,8 +1282,7 @@ This creates a floating chat widget that can be added to any page
   scroll-behavior: smooth;
   height: 100% !important; /* Take full available height */
   box-sizing: border-box !important;
-  background: #fafafa; /* Light background to distinguish from header/footer */
-  padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px)) !important;
+  background: ${widgetSettings.useDefaultAppearance ? 'transparent' : '#fafafa'};
 }
 
 .ai-chat-messages.welcome-active {
@@ -1412,23 +1426,31 @@ This creates a floating chat widget that can be added to any page
   40% { transform: scale(1); }
 }
 
-.ai-chat-input {
+.ai-chat-input-container {
+  grid-area: input !important;
   padding: 15px;
+  border-radius: 0 0 25px 25px;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+}
+
+.ai-chat-input {
   border-top: none;
   position: relative;
   display: flex;
   align-items: center;
   z-index: 10; /* Keep above other content */
-  height: 70px !important; /* Fixed height to prevent shifting */
+  height: 50px !important; /* Reduced height since powered-by is outside */
   box-sizing: border-box !important;
-  border-radius: 0 0 25px 25px; /* Match window border radius */
-  grid-area: input !important;
+  border-radius: 25px; /* Rounded input area */
+  padding: 0; /* Remove padding, it's on container now */
 }
 
 .ai-chat-input input {
   width: 100%;
   padding: 10px 50px 10px 12px; /* Add right padding for button */
-  border: 1px solid #ddd;
+  border: none;
   border-radius: 20px;
   font-size: 14px;
   outline: none;
@@ -1436,7 +1458,6 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-input input:focus {
-  border-color: var(--ai-primary-color, #ee5cee);
   background: ${widgetSettings.useDefaultAppearance ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.1)'} !important;
   color: ${widgetSettings.useDefaultAppearance ? 'white' : 'black'} !important;
 }
@@ -1466,6 +1487,15 @@ This creates a floating chat widget that can be added to any page
 
 .ai-chat-input button:hover {
   background: ${widgetSettings.useDefaultAppearance ? 'rgba(255,255,255,0.1)' : 'rgba(238, 92, 238, 0.1)'};
+}
+
+.ai-powered-by {
+  text-align: center;
+  font-size: 11px;
+  color: ${widgetSettings.useDefaultAppearance ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.5)'};
+  margin-top: 6px;
+  font-weight: 400;
+  padding: 0 15px;
 }
 
 /* Typewriter Animation for Welcome Message */
@@ -1686,129 +1716,16 @@ This creates a floating chat widget that can be added to any page
     bottom: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    height: 100dvh !important; /* Use dynamic viewport height if supported */
+    height: 100dvh !important;
     border-radius: 0 !important;
     z-index: 99999 !important;
     max-height: none !important;
     min-height: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
-    overflow: hidden !important; /* No scroll on window */
-    padding-bottom: 0 !important;
   }
-  .ai-chat-input {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100vw !important;
-    z-index: 10001 !important;
+  
+  .ai-chat-content-container {
     border-radius: 0 !important;
-    height: auto !important;
-    min-height: 60px !important;
-    padding: max(10px, env(safe-area-inset-bottom, 0)) 10px 10px 10px !important;
-    border-top: none !important;
-    display: flex !important;
-    align-items: center !important;
-    box-sizing: border-box !important;
-    background: #fafafa !important;
   }
-  .ai-chat-messages-container {
-    flex: 1 1 0% !important;
-    min-height: 0 !important;
-    overflow: hidden !important; /* No scroll on container */
-    display: flex !important;
-    flex-direction: column !important;
-    padding-bottom: env(safe-area-inset-bottom, 0) !important;
-    position: relative !important;
-    height: 100%;
-    max-height: 100%;
-    background: #fafafa !important;
-  }
-  .ai-chat-messages {
-    flex: 1 1 0% !important;
-    height: 100% !important;
-    max-height: 100% !important;
-    min-height: 0 !important;
-    overflow-y: auto !important; /* Only message section scrolls */
-    -webkit-overflow-scrolling: touch !important;
-    box-sizing: border-box !important;
-    padding: 16px 10px 10px 10px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    background: #fafafa !important;
-  }
-  .ai-chat-messages.welcome-active {
-    padding-top: 0 !important;
-  }
-  .ai-chat-messages.has-messages {
-    justify-content: flex-start !important;
-    align-items: stretch !important;
-    width: 100% !important;
-  }
-  .ai-welcome-header {
-    border-bottom: none !important;
-  }
-  .ai-welcome-message {
-    border-bottom: none !important;
-  }
-  .ai-chat-input input {
-    font-size: 16px !important;
-    width: 100% !important;
-    padding: 10px 50px 10px 12px !important;
-    box-sizing: border-box !important;
-  }
-  .ai-chat-input button {
-    position: absolute !important;
-    right: 15px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 36px !important;
-    height: 36px !important;
-  }
-  
-  /* Ensure input is always visible and properly rendered */
-  .ai-chat-input {
-    -webkit-transform: translateZ(0) !important;
-    transform: translateZ(0) !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-  }
-  
-  /* FORCE REMOVE ALL BORDERS - NUCLEAR OPTION */
-  .ai-sales-assistant-widget .ai-chat-input,
-  .ai-sales-assistant-widget .ai-chat-input::before,
-  .ai-sales-assistant-widget .ai-chat-input::after,
-  .ai-chat-window .ai-chat-input,
-  #ai-sales-assistant-overlay .ai-chat-input {
-    border: 0px solid transparent !important;
-    border-top: 0px solid transparent !important;
-    border-bottom: 0px solid transparent !important;
-    border-left: 0px solid transparent !important;
-    border-right: 0px solid transparent !important;
-    border-width: 0px !important;
-    border-style: none !important;
-    border-color: transparent !important;
-    outline: 0px solid transparent !important;
-    outline-width: 0px !important;
-    outline-style: none !important;
-    box-shadow: none !important;
-    -webkit-box-shadow: none !important;
-    -moz-box-shadow: none !important;
-  }
-  
-  /* Also target messages container that might have borders */
-  .ai-sales-assistant-widget .ai-chat-messages-container,
-  .ai-sales-assistant-widget .ai-chat-messages,
-  .ai-chat-window .ai-chat-messages-container,
-  .ai-chat-window .ai-chat-messages {
-    border-bottom: 0px solid transparent !important;
-    border-bottom-width: 0px !important;
-    border-bottom-style: none !important;
-    border-bottom-color: transparent !important;
-  }
-  
 }
 
 /* Tablet responsiveness */
@@ -1871,19 +1788,19 @@ This creates a floating chat widget that can be added to any page
 }
 
 /* Theme-aware mobile background overrides */
+/* FORCE BACKGROUND CONSISTENCY FOR DEFAULT APPEARANCE */
 ${widgetSettings.useDefaultAppearance ? `
-@media (max-width: 480px) {
-  .ai-chat-input {
-    background: rgba(0, 0, 0, 0.2) !important;
-    backdrop-filter: blur(12px) !important;
-  }
-  .ai-chat-messages-container {
-    background: rgba(0, 0, 0, 0.2) !important;
-    backdrop-filter: blur(12px) !important;
-  }
-  .ai-chat-messages {
-    background: transparent !important;
-  }
+.ai-sales-assistant-widget .ai-chat-input-container,
+.ai-sales-assistant-widget .ai-chat-messages-container,
+div[data-widget-id="ai-sales-assistant"] .ai-chat-input-container,
+div[data-widget-id="ai-sales-assistant"] .ai-chat-messages-container {
+  background: rgba(0, 0, 0, 0.2) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+.ai-sales-assistant-widget .ai-chat-messages,
+div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
+  background: transparent !important;
 }
 ` : ''}
     `;
