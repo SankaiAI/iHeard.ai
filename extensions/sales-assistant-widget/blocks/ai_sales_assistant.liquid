@@ -180,6 +180,8 @@ This creates a floating chat widget that can be added to any page
     if (welcomeText && !welcomeText.classList.contains('animation-started')) {
       welcomeText.classList.add('animation-started');
       
+      // Make the text visible and clear content for typewriter effect
+      welcomeText.style.opacity = '1';
       const fullText = welcomeText.textContent;
       welcomeText.textContent = '';
       
@@ -195,7 +197,26 @@ This creates a floating chat widget that can be added to any page
           // Remove cursor after animation completes
           setTimeout(() => {
             welcomeText.classList.add('typing-complete');
-          }, 1000); // Wait 1 second after typing finishes
+            
+            // Start fade out animation after a brief pause
+            setTimeout(() => {
+              welcomeText.classList.add('fade-out');
+              
+              // Complete fade out and hide the welcome message
+              setTimeout(() => {
+                const welcomeMessage = welcomeText.closest('.ai-welcome-message');
+                if (welcomeMessage) {
+                  welcomeMessage.style.display = 'none';
+                  
+                  // Remove welcome-active class from messages container
+                  const messagesContainer = document.getElementById('ai-chat-messages');
+                  if (messagesContainer) {
+                    messagesContainer.classList.remove('welcome-active');
+                  }
+                }
+              }, 2000); // Wait for fade animation to complete (2s)
+            }, 2000); // Wait 2 seconds after typing finishes before starting fade
+          }, 1000); // Wait 1 second after typing finishes to remove cursor
         }
       }
       
@@ -216,6 +237,18 @@ This creates a floating chat widget that can be added to any page
     if (chatOpen) {
       chatWindow.classList.add('ai-chat-open');
       chatWindow.style.display = 'grid'; // Ensure visible when open
+      
+      // Check if welcome message exists and is visible, then add centering class
+      const messagesContainer = document.getElementById('ai-chat-messages');
+      const welcomeMessage = messagesContainer?.querySelector('.ai-welcome-message');
+      if (messagesContainer && welcomeMessage) {
+        const isWelcomeVisible = window.getComputedStyle(welcomeMessage).display !== 'none';
+        if (isWelcomeVisible) {
+          messagesContainer.classList.add('welcome-active');
+        } else {
+          messagesContainer.classList.remove('welcome-active');
+        }
+      }
       
       // Start welcome message animation with a slight delay
       setTimeout(() => {
@@ -943,7 +976,7 @@ This creates a floating chat widget that can be added to any page
                 <div class="ai-message assistant-message ai-welcome-message" style="margin-bottom: 16px !important; margin-top: 0px !important; display: block !important; max-width: 100% !important; width: 100% !important;">
                   <div class="ai-welcome-container" style="background: transparent; padding: 0;">
                     <div class="ai-welcome-header" style="margin-bottom: 20px;">
-                      <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.useDefaultAppearance ? 'white' : (widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333')};">${widgetSettings.welcomeMessage}</h3>
+                      <h3 id="welcome-text" class="typewriter" style="margin: 0; font-size: 18px; font-weight: 600; color: ${widgetSettings.useDefaultAppearance ? 'white' : (widgetSettings.chatBackgroundColor === 'black' ? 'white' : '#333')}; opacity: 0;">${widgetSettings.welcomeMessage}</h3>
                     </div>
                     <!-- All suggestion sections removed -->
                   </div>
@@ -1198,11 +1231,11 @@ This creates a floating chat widget that can be added to any page
 .ai-chat-header-rect {
   background: rgba(0, 0, 0, 0.8) !important;
   border-radius: 25px;
-  padding: 15px 28px;
+  padding: 10px 38px;
   margin: 10px 20px;
   width: calc(100% - 40px);
   height: auto;
-  max-width: 400px;
+  max-width: 420px;
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -1219,12 +1252,14 @@ This creates a floating chat widget that can be added to any page
   align-items: center;
   width: 100%;
   flex: 1;
+  padding: 0; /* Remove padding to allow elements to get closer to edges */
 }
 
 .ai-chat-title-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-left: -15px; /* Move title and arrow much closer to the left edge */
 }
 
 .ai-chat-header h3 {
@@ -1244,6 +1279,7 @@ This creates a floating chat widget that can be added to any page
   display: flex;
   align-items: center;
   gap: 12px;
+  margin-right: -15px; /* Move call button and status much closer to the right edge */
 }
 
 .ai-call-status {
@@ -1686,6 +1722,22 @@ This creates a floating chat widget that can be added to any page
 .typewriter.typing-complete {
   border-right: none;
   animation: none;
+}
+
+/* Fade out animation for welcome message */
+.typewriter.fade-out {
+  animation: welcome-fade-out 2s ease-out forwards;
+}
+
+@keyframes welcome-fade-out {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
 }
 
 /* Mobile responsiveness */

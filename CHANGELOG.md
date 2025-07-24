@@ -1,4 +1,56 @@
-# @shopify/shopify-app-template-remix
+# iHeard.ai - AI Sales Assistant for Shopify
+
+## [Unreleased] - iHeard.ai Features
+
+### Added - Voice Call Integration
+- **Voice call functionality** with click-to-call button in chat header
+- **Dynamic wave animation** that responds only to detected speech (14 animated bars)
+- **Enhanced voice detection** with background noise calibration and pattern recognition
+- **Voice status indicators**: "Connecting" (orange pulse) → "In Call" (green) → Manual "End" control
+- **Speech-only animation**: Wave bars remain static until actual human speech is detected
+- **Background noise calibration**: 2-second automatic environment measurement on call start
+- **Advanced speech filtering**: Distinguishes speech from keyboard typing, door slams, background noise
+- **Voice status messages**: "Calibrating..." → "I'm hearing" → "I heard you"
+- **Smooth input transitions**: Professional fade/scale animations between input box and wave visualization
+
+### Added - Enhanced UI/UX Features  
+- **Semi-transparent default appearance** with backdrop blur effects and glass styling
+- **Gradient background support** with customizable colors and directions
+- **Enhanced product recommendation cards** with hover effects, relevance badges, and improved spacing
+- **Typewriter animation** for welcome messages with cursor effect
+- **Fireworks celebration animation** triggered on product recommendations
+- **Mobile fullscreen experience** with proper viewport handling and touch optimization
+- **Professional loading states** with animated dots and context-aware messaging
+
+### Added - Technical Enhancements
+- **Advanced Web Audio API integration** with 512 FFT resolution for frequency analysis
+- **Speech frequency analysis** targeting 300Hz-3400Hz human speech range
+- **Pattern recognition system** requiring 3-out-of-4 samples to confirm speech (reduces false positives)
+- **Dynamic threshold adjustment** based on environment background noise levels
+- **Echo cancellation and noise suppression** through getUserMedia constraints
+- **Graceful fallback protection** for microphone access denial scenarios
+- **Real-time audio analysis** with 60fps wave animation updates
+- **Enhanced mobile responsiveness** with fullscreen chat interface and improved scrolling
+
+### Enhanced - Existing Features
+- **Product recommendation display** with enhanced visual cards and better product information layout
+- **Chat message spacing** with improved margins and scrolling behavior  
+- **Settings synchronization** with 5-minute polling interval (reduced from 2 seconds for performance)
+- **Mobile chat experience** with fullscreen interface and proper keyboard handling
+- **Widget positioning system** with improved mobile adaptations
+- **Color customization** expanded to support gradients and transparency effects
+
+### Technical Implementation Details
+- **Voice detection threshold**: `backgroundNoise + 20` with 40% speech energy ratio requirement
+- **Speech validation**: Requires 2.5x background noise level and consistent pattern recognition
+- **Wave animation**: Center-focused bars with frequency-mapped heights (8px-24px range)
+- **Transition timing**: 300ms fade with 50ms delay for smooth visual effects
+- **Microphone initialization**: Enhanced with `echoCancellation`, `noiseSuppression`, `autoGainControl`
+- **Audio context**: 512 FFT size with 0.8 smoothing constant for optimal speech detection
+
+---
+
+# Shopify App Template Changelog
 
 ## 2025.07.07
 - [#1103](https://github.com/Shopify/shopify-app-template-remix/pull/1086) Remove deprecated .npmrc config values

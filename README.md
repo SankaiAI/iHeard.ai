@@ -7,13 +7,31 @@ An intelligent AI-powered sales assistant widget for Shopify stores that helps c
 
 ## 📋 Features
 
-- **🎯 Smart Product Recommendations** - AI-powered product suggestions based on customer queries
-- **💬 Real-time Chat Interface** - Floating chat widget with customizable positioning
-- **🎨 Fully Customizable** - Admin panel to configure colors, text, position, and behavior
-- **📱 Mobile Responsive** - Optimized for all device sizes
-- **🔌 N8N Integration** - Optional integration with N8N workflows for advanced AI processing
-- **⚡ Real-time Updates** - Settings changes reflect immediately on the storefront
-- **🛡️ Secure** - Built with Shopify's security best practices
+### 🎯 **Core AI Features**
+- **Smart Product Recommendations** - AI-powered product suggestions with enhanced product cards and visual previews
+- **Real-time Chat Interface** - Floating widget with typewriter animation, customizable themes, and mobile optimization
+- **Voice Call Integration** - Click-to-call functionality with voice status indicators and manual call control
+- **Enhanced Voice Detection** - Advanced speech recognition with background noise calibration and pattern validation
+
+### 🎨 **Visual & UX Features**
+- **Dynamic Wave Animation** - Real-time voice visualization that responds only to detected speech
+- **Customizable Themes** - Default semi-transparent appearance or fully customizable colors, gradients, and glass effects
+- **Responsive Design** - Mobile-first with fullscreen mobile experience and desktop floating widget
+- **Interactive Elements** - Fireworks animations, smooth transitions, and professional loading states
+- **Six Position Options** - Place widget anywhere: corners, center sides, fully customizable
+
+### 🔧 **Technical Features**
+- **Real-time Updates** - Settings changes reflect on storefront within 5 seconds
+- **Background Noise Calibration** - 2-second automatic calibration for optimal voice detection
+- **Speech Pattern Recognition** - Filters out keyboard typing, door slams, and background noise
+- **Microphone Integration** - Advanced Web Audio API with echo cancellation and noise suppression
+- **Fallback Protection** - Graceful degradation when microphone access is denied
+
+### 🔌 **Integration & Configuration**
+- **Dual AI Workflows** - Choose between developer's default AI or custom N8N webhook integration
+- **App Proxy Architecture** - Seamless settings synchronization through Shopify's app proxy system
+- **Database Persistence** - SQLite for development, PostgreSQL ready for production
+- **OAuth Security** - Full Shopify authentication with session management
 
 ## 🏗️ Architecture
 
@@ -144,6 +162,36 @@ ihear-ai/
 - Database persistence ensures settings survive server restarts
 - Fallback to default settings if API is unavailable
 
+## 🎙️ Voice Call Features
+
+### Voice Status Indicators
+- **"Connecting"** with orange pulsing indicator when call initiates
+- **"In Call"** status with green indicator during active calls
+- **Manual call control** - User must click "End" to terminate calls (no auto-reset)
+
+### Dynamic Wave Animation
+- **Speech-Only Animation** - Wave bars remain static until actual speech is detected
+- **Center-Focused Design** - Bars animate from edges toward center for natural wave effect
+- **Frequency-Based Heights** - Each bar responds to different speech frequency ranges (300Hz-3400Hz)
+- **Enhanced Detection** - Distinguishes human speech from background noise, keyboard typing, and sudden sounds
+
+### Voice Detection Technology
+- **Background Noise Calibration** - 2-second automatic measurement on call start
+- **Pattern Recognition** - Requires 3 out of 4 samples to confirm speech (reduces false positives)
+- **Advanced Audio Processing** - Uses Web Audio API with echo cancellation and noise suppression
+- **Dynamic Thresholds** - Automatically adjusts sensitivity based on environment
+
+### Voice Status Messages
+- **"Calibrating..."** - During initial 2-second noise measurement
+- **"I'm hearing"** - Ready state, waiting for user to speak
+- **"I heard you"** - Active speech detected and processing
+
+### Input Transformation
+- **Smooth Transitions** - Input box fades out with scale animation (300ms)
+- **Wave Appearance** - Wave animation fades in with professional scaling effect
+- **Seamless Restoration** - Returns to input box when call ends
+- **Mobile Optimization** - Fullscreen experience on mobile devices
+
 ## 🔧 Development
 
 ### Database Management
@@ -227,6 +275,44 @@ The app provides robust fallback protection:
 - If custom webhook fails → Falls back to local processing
 - If network issues occur → Provides helpful default responses
 - Ensures chat widget always works regardless of external dependencies
+
+### Voice Call API Configuration
+
+**Voice Service Integration:**
+The voice call feature is designed to integrate with external voice processing services. Currently, placeholder URLs are used in the code that need to be replaced with your actual voice service endpoints:
+
+```javascript
+// Replace these placeholder URLs in ai_sales_assistant.liquid:
+const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/status';  // Health check
+const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/start';   // Start call
+const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/end';     // End call
+```
+
+**Required Voice API Endpoints:**
+- `GET /api/voice/status` - Check if voice service is available
+- `POST /api/voice/start` - Initiate voice call session
+- `POST /api/voice/end` - Terminate voice call session
+
+**Voice Service Expected Response Format:**
+```json
+// Status endpoint
+{
+  "status": "available|busy|unavailable"
+}
+
+// Start endpoint  
+{
+  "success": true,
+  "sessionId": "voice_session_123",
+  "message": "Voice call started"
+}
+```
+
+**Current Implementation:**
+- Voice detection and wave animation work independently of external APIs
+- Call button triggers "Agent is busy" alert if voice service is unavailable
+- Manual call control allows users to end calls regardless of API response
+- Graceful fallback ensures widget functionality even without voice service integration
 
 ## 🚀 Deployment
 
