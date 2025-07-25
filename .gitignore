@@ -121,3 +121,49 @@ Thumbs.db
 # Local development
 *.local
 .vercel
+
+# Project-specific temporary files
+migrate-avatar-field.js
+verify-avatar-migration.js
+
+# Package manager lockfiles (keep only one)
+pnpm-lock.yaml
+
+# Jest and testing
+coverage/
+test-results/
+*.test.js.snap
+
+# Deployment and build artifacts
+.output/
+.netlify/
+
+# Windows-specific files
+*.exe
+*.msi
+desktop.ini
+
+# macOS-specific files (additional)
+.AppleDouble
+.LSOverride
+Icon?
+
+# IDE-specific files
+*.sublime-project
+*.sublime-workspace
+.history/
+
+# Backup files
+*.bak
+*.backup
+*.orig
+
+# Log files (additional patterns)
+*.log
+logs/
+pids/
+*.pid.lock
+
+# Temporary directories
+.tmp/
+.temp/

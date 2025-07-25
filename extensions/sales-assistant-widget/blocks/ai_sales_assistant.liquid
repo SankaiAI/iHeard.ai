@@ -1148,15 +1148,15 @@ This creates a floating chat widget that can be added to any page
   position: absolute;
   bottom: 70px;
   right: 0;
-  width: 420px;
-  height: 600px;
+  width: 525px;
+  height: 750px;
   border-radius: 25px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   display: none;
   overflow-x: hidden;
   overflow-y: visible;
-  max-height: 600px;
-  min-height: 600px;
+  max-height: 750px;
+  min-height: 750px;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
@@ -1220,13 +1220,14 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-header-rect {
-  background: rgba(0, 0, 0, 0.8) !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 25px;
   padding: 10px 38px;
   margin: 10px 20px;
   width: calc(100% - 40px);
   height: auto;
-  max-width: 420px;
+  max-width: 525px;
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
@@ -1338,8 +1339,9 @@ This creates a floating chat widget that can be added to any page
 }
 
 .ai-chat-call-btn {
-  background: rgba(74, 144, 226, 0.9);
-  border: none;
+  background: rgba(74, 144, 226, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: white;
   cursor: pointer;
   padding: 9px 16px;
@@ -1350,11 +1352,13 @@ This creates a floating chat widget that can be added to any page
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
 }
 
 .ai-chat-call-btn:hover {
-  background: rgba(74, 144, 226, 1);
+  background: rgba(74, 144, 226, 0.9);
   transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
 }
 
 .ai-chat-call-btn svg {
@@ -1698,6 +1702,7 @@ This creates a floating chat widget that can be added to any page
 #ai-chat-send-btn:active,.ai-chat-input #ai-chat-send-btn:active{transform:translateY(-50%) translateY(0px)!important;box-shadow:0 2px 6px rgba(74,144,226,.3)!important}
 
 #ai-chat-send-btn svg,#ai-chat-send-btn svg path{stroke:white!important;fill:none!important}
+.ai-sales-assistant-widget #ai-chat-send-btn,.ai-sales-assistant-widget .ai-chat-input #ai-chat-send-btn,.ai-sales-assistant-widget .ai-chat-input button#ai-chat-send-btn,button#ai-chat-send-btn[id="ai-chat-send-btn"]{background:rgba(74,144,226,.9)!important;color:white!important}
 
 .ai-powered-by {
   text-align: center;
@@ -1960,6 +1965,17 @@ This creates a floating chat widget that can be added to any page
 
 /* Tablet responsiveness */
 @media (max-width: 768px) and (min-width: 481px) {
+  .ai-chat-window {
+    width: 420px !important;
+    height: 600px !important;
+    max-height: 600px !important;
+    min-height: 600px !important;
+  }
+  
+  .ai-chat-header-rect {
+    max-width: 420px !important;
+  }
+  
   .products-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
     gap: 10px;
@@ -2115,6 +2131,19 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
     // Send button event listener
     const sendBtn = document.getElementById('ai-chat-send-btn');
     if (sendBtn) {
+      // Force blue styling with JavaScript as backup
+      sendBtn.style.setProperty('background', 'rgba(74, 144, 226, 0.9)', 'important');
+      sendBtn.style.setProperty('color', 'white', 'important');
+      sendBtn.style.setProperty('border', 'none', 'important');
+      sendBtn.style.setProperty('border-radius', '50%', 'important');
+      sendBtn.style.setProperty('box-shadow', '0 2px 6px rgba(74, 144, 226, 0.3)', 'important');
+      
+      // Force SVG icon to be white
+      const svg = sendBtn.querySelector('svg');
+      const path = sendBtn.querySelector('svg path');
+      if (svg) svg.style.setProperty('stroke', 'white', 'important');
+      if (path) path.style.setProperty('stroke', 'white', 'important');
+      
       // Remove existing listener if any
       if (window.aiWidgetHandlers.sendHandler) {
         sendBtn.removeEventListener('click', window.aiWidgetHandlers.sendHandler);
@@ -2127,7 +2156,7 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
       };
       
       sendBtn.addEventListener('click', window.aiWidgetHandlers.sendHandler);
-      console.log('✅ AI Widget: Send button event listener added');
+      console.log('✅ AI Widget: Send button event listener added and styling forced');
     } else {
       console.warn('⚠️ AI Widget: Send button not found');
     }
