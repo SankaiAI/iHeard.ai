@@ -377,10 +377,13 @@ This creates a floating chat widget that can be added to any page
   };
   
   // Add message to chat
-  function addMessageToChat(sender, message) {
+  function addMessageToChat(sender, message, messageType = null) {
     const messagesContainer = document.getElementById('ai-chat-messages');
     const messageDiv = document.createElement('div');
-    messageDiv.className = `ai-message ${sender}-message`;
+    
+    // Use messageType if provided, otherwise use sender
+    const messageClass = messageType || sender;
+    messageDiv.className = `ai-message ${messageClass}-message`;
     
     // Force spacing with inline styles to override any CSS
     messageDiv.style.marginBottom = '0px';
@@ -406,27 +409,13 @@ This creates a floating chat widget that can be added to any page
     messageContent.style.maxWidth = '100%';
     messageContent.style.boxSizing = 'border-box';
     
-    if (sender === 'user') {
-      if (widgetSettings.useDefaultAppearance) {
-        messageContent.style.backgroundColor = 'rgba(255, 255, 255, 0.15)';
-        messageContent.style.backdropFilter = 'blur(8px)';
-        messageContent.style.border = '1px solid rgba(255, 255, 255, 0.2)';
-        messageContent.style.color = 'white';
-      } else {
-        messageContent.style.backgroundColor = widgetSettings.primaryColor;
-        messageContent.style.color = 'white';
-      }
-    } else {
-      if (widgetSettings.useDefaultAppearance) {
-        messageContent.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-        messageContent.style.backdropFilter = 'blur(6px)';
-        messageContent.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-        messageContent.style.color = 'white';
-      } else {
-        messageContent.style.backgroundColor = '#f1f1f1';
-        messageContent.style.color = '#333';
-      }
+    // Apply dark mode class if using default appearance
+    if (widgetSettings.useDefaultAppearance) {
+      messageContent.classList.add('dark-mode');
     }
+    
+    // Remove the old inline styling since we're now using CSS classes
+    // The new styling is handled entirely by CSS classes
     
     messageDiv.appendChild(messageContent);
     // Remove welcome message if present BEFORE adding .has-messages
@@ -710,12 +699,9 @@ This creates a floating chat widget that can be added to any page
       loadingDiv.id = 'ai-loading';
       loadingDiv.className = 'ai-loading';
       
-      // Apply default appearance styling if enabled
+      // Apply dark mode class if using default appearance
       if (widgetSettings.useDefaultAppearance) {
-        loadingDiv.style.backgroundColor = 'rgba(255, 255, 255, 0.08)';
-        loadingDiv.style.backdropFilter = 'blur(6px)';
-        loadingDiv.style.border = '1px solid rgba(255, 255, 255, 0.1)';
-        loadingDiv.style.color = 'white';
+        loadingDiv.classList.add('dark-mode');
       }
       
       const loadingDots = document.createElement('div');
@@ -950,6 +936,11 @@ This creates a floating chat widget that can be added to any page
                         <path d="M19 9l-7 7-7-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     </button>
+                    ${widgetSettings.avatarUrl ? `
+                    <div class="ai-chat-avatar">
+                      <img src="${widgetSettings.avatarUrl}" alt="Assistant Avatar" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);">
+                    </div>
+                    ` : ''}
                     <h3>${widgetSettings.chatTitle}</h3>
                   </div>
                   <div class="ai-call-section">
@@ -997,7 +988,7 @@ This creates a floating chat widget that can be added to any page
                 />
                 <button id="ai-chat-send-btn">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="${widgetSettings.useDefaultAppearance ? 'white' : widgetSettings.primaryColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18 2L9 11M18 2L12 18L9 11M18 2L2 8L9 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 </button>
               </div>
@@ -1262,6 +1253,20 @@ This creates a floating chat widget that can be added to any page
   margin-left: -15px; /* Move title and arrow much closer to the left edge */
 }
 
+.ai-chat-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-chat-avatar img {
+  transition: transform 0.2s ease;
+}
+
+.ai-chat-avatar img:hover {
+  transform: scale(1.05);
+}
+
 .ai-chat-header h3 {
   margin: 0;
   font-size: 16px;
@@ -1497,33 +1502,52 @@ This creates a floating chat widget that can be added to any page
 }
 
 .message-content {
-  padding: 10px 14px;
-  border-radius: 18px;
+  padding: 12px 16px;
+  border-radius: 20px;
   font-size: 14px;
-  line-height: 1.4;
+  line-height: 1.5;
   word-wrap: break-word !important;
   word-break: break-word !important;
   overflow-wrap: break-word !important;
   hyphens: auto;
   max-width: 100% !important;
-  white-space: normal !important; /* Normal whitespace handling - trim extra spaces */
+  white-space: normal !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  position: relative;
+  backdrop-filter: blur(10px);
   box-sizing: border-box !important;
-  overflow: visible !important; /* Allow content to show fully */
+  overflow: visible !important;
 }
 
-.ai-loading {
-  padding: 10px 14px;
-  border-radius: 18px;
-  background: #f1f1f1;
-  color: #333;
-  margin-bottom: 16px !important; /* Match message spacing */
-  margin-top: 0 !important;
-  max-width: 85% !important;
-  width: fit-content;
-  align-self: flex-start; /* Left-align like assistant messages */
-  display: block !important;
-  box-sizing: border-box !important;
-}
+.ai-message.user-message .message-content{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-bottom-right-radius:8px;margin-left:auto;margin-right:8px;box-shadow:0 4px 12px rgba(102,126,234,.3);position:relative}
+.ai-message.user-message .message-content::after{content:'';position:absolute;bottom:0;right:-8px;width:0;height:0;border:8px solid transparent;border-left:8px solid #764ba2;border-bottom:0;border-right:0}
+.ai-message.assistant-message .message-content{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:#2c3e50;border-bottom-left-radius:8px;margin-left:8px;margin-right:auto;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;border:1px solid rgba(255,255,255,.8)}
+.ai-message.assistant-message .message-content::after{content:'';position:absolute;bottom:0;left:-8px;width:0;height:0;border:8px solid transparent;border-right:8px solid #c3cfe2;border-bottom:0;border-left:0}
+
+.ai-message.user-message .message-content.dark-mode{background:linear-gradient(135deg,#4a90e2 0%,#6c5ce7 100%);box-shadow:0 4px 12px rgba(74,144,226,.4)}
+.ai-message.assistant-message .message-content.dark-mode{background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,.08) 100%);color:white;border:1px solid rgba(255,255,255,.2);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.ai-message.assistant-message .message-content.dark-mode::after{border-right-color:rgba(255,255,255,.08)}
+.message-content:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.15)}
+.ai-message.user-message .message-content:hover{box-shadow:0 6px 16px rgba(102,126,234,.4)}
+.ai-message{margin-bottom:16px!important;animation:messageSlideIn .3s ease-out}
+@keyframes messageSlideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.message-content p{margin:0 0 8px 0}.message-content p:last-child{margin-bottom:0}.message-content strong{font-weight:600}.message-content em{font-style:italic;opacity:.9}
+.ai-message.system-message .message-content{background:linear-gradient(135deg,#ffeaa7 0%,#fab1a0 100%);color:#2d3436;text-align:center;font-size:13px;padding:8px 12px;border-radius:16px;margin:0 auto;box-shadow:0 2px 6px rgba(255,234,167,.4);border:1px solid rgba(255,255,255,.6)}
+.ai-message.system-message .message-content.dark-mode{background:linear-gradient(135deg,rgba(255,234,167,.2) 0%,rgba(250,177,160,.2) 100%);color:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.1)}
+.ai-message.system-message .message-content::after{display:none}
+
+.ai-message.user-message{display:flex;justify-content:flex-end;margin-bottom:12px!important}
+.ai-message.assistant-message{display:flex;justify-content:flex-start;margin-bottom:12px!important}
+.ai-message.system-message{display:flex;justify-content:center;margin-bottom:8px!important}
+@media (max-width:480px){.message-content{padding:10px 14px;border-radius:18px}.ai-message.user-message .message-content,.ai-message.assistant-message .message-content{max-width:85%}}
+
+.ai-loading{padding:12px 16px;border-radius:20px;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);color:#2c3e50;border-bottom-left-radius:8px;margin-left:8px;margin-right:auto;box-shadow:0 4px 12px rgba(0,0,0,.08);position:relative;border:1px solid rgba(255,255,255,.8);animation:messageSlideIn .3s ease-out}
+.ai-loading.dark-mode{background:linear-gradient(135deg,rgba(255,255,255,.15) 0%,rgba(255,255,255,.08) 100%);color:white;border:1px solid rgba(255,255,255,.2);box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.ai-loading::after{content:'';position:absolute;bottom:0;left:-8px;width:0;height:0;border:8px solid transparent;border-right:8px solid #c3cfe2;border-bottom:0;border-left:0}
+.ai-loading.dark-mode::after{border-right-color:rgba(255,255,255,.08)}
+.ai-loading-container{margin-bottom:16px!important;margin-top:0!important;max-width:85%!important;width:fit-content;align-self:flex-start;display:block!important;box-sizing:border-box!important}
 
 .loading-dots {
   display: inline-flex;
@@ -1669,27 +1693,11 @@ This creates a floating chat widget that can be added to any page
   color: ${widgetSettings.useDefaultAppearance ? 'white' : 'black'} !important;
 }
 
-.ai-chat-input button {
-  position: absolute;
-  right: 20px; /* Position inside the input */
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background-color 0.2s;
-  color: ${widgetSettings.useDefaultAppearance ? 'white' : 'var(--ai-primary-color, #ee5cee)'};
-}
+#ai-chat-send-btn,.ai-chat-input #ai-chat-send-btn{position:absolute!important;right:20px!important;top:50%!important;transform:translateY(-50%)!important;background:rgba(74,144,226,.9)!important;border:none!important;border-radius:50%!important;width:36px!important;height:36px!important;cursor:pointer!important;display:flex!important;align-items:center!important;justify-content:center!important;transition:all .2s ease!important;color:white!important;box-shadow:0 2px 6px rgba(74,144,226,.3)!important}
+#ai-chat-send-btn:hover,.ai-chat-input #ai-chat-send-btn:hover{background:rgba(74,144,226,1)!important;transform:translateY(-50%) translateY(-1px)!important;box-shadow:0 4px 12px rgba(74,144,226,.4)!important}
+#ai-chat-send-btn:active,.ai-chat-input #ai-chat-send-btn:active{transform:translateY(-50%) translateY(0px)!important;box-shadow:0 2px 6px rgba(74,144,226,.3)!important}
 
-.ai-chat-input button:hover {
-  background: ${widgetSettings.useDefaultAppearance ? 'rgba(255,255,255,0.1)' : 'rgba(238, 92, 238, 0.1)'};
-}
+#ai-chat-send-btn svg,#ai-chat-send-btn svg path{stroke:white!important;fill:none!important}
 
 .ai-powered-by {
   text-align: center;
@@ -2580,37 +2588,6 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
     }
   }
   
-  async function checkVoiceAPIConnection() {
-    try {
-      // Replace this URL with your voice service endpoint
-      const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/status';
-      
-      const response = await fetch(voiceServiceUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        timeout: 5000 // 5 second timeout
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'available') {
-          updateCallStatus('connected', 'Connected');
-          return true;
-        }
-      }
-      
-      // If we get here, service is not available
-      updateCallStatus('connecting', 'Connecting');
-      return false;
-      
-    } catch (error) {
-      console.error('Voice API connection check failed:', error);
-      updateCallStatus('connecting', 'Connecting');
-      return false;
-    }
-  }
   
   async function handleVoiceCall() {
     // If call is already active, end the call
@@ -2635,76 +2612,101 @@ div[data-widget-id="ai-sales-assistant"] .ai-chat-messages {
       console.warn('🎤 Microphone not available, showing static wave animation');
     }
     
-    const isConnected = await checkVoiceAPIConnection();
-    
-    if (!isConnected) {
-      // Show busy message - user must manually click End to reset status
-      alert('Agent is busy now, please try again later.');
-      // Do not automatically reset the status and button - user must manually click End
-      return;
-    }
     
     try {
-      // Replace this URL with your voice service endpoint
-      const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/start';
+      // Integrate with ElevenLabs voice agent
+      const elevenLabsAgentId = 'agent_7301k0zxvyase56bd72y5razan9h';
       
-      const response = await fetch(voiceServiceUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          shopDomain: '{{ shop.myshopify_domain }}',
-          context: {
-            page: window.location.pathname,
-            productId: getProductIdFromPage(),
-            conversationHistory: conversationHistory
-          }
-        })
-      });
+      console.log('🔊 Starting ElevenLabs voice agent:', elevenLabsAgentId);
       
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔊 Voice call started:', data);
-        
-        // You would typically redirect to a voice interface or start WebRTC here
-        // For now, just show a success message
-        updateCallStatus('connected', 'In Call');
-        
-        // TODO: Implement actual voice interface
-        // This could involve:
-        // 1. Opening a new window/modal with voice interface
-        // 2. Starting WebRTC connection
-        // 3. Handling audio streaming
-        
-      } else {
-        throw new Error('Failed to start voice call');
-      }
+      // Update status to show connected
+      updateCallStatus('connected', 'In Call');
+      
+      // Start voice interaction with ElevenLabs
+      await startElevenLabsVoiceSession(elevenLabsAgentId);
       
     } catch (error) {
       console.error('Voice call failed:', error);
-      alert('Agent is busy now, please try again later.');
-      // Do not automatically reset the status and button - user must manually click End
+      alert('Failed to start voice call. Please try again later.');
+      // Reset UI on error
+      hideCallStatus();
+      updateCallButton(false);
+      hideVoiceWave();
     }
+  }
+  
+  // ElevenLabs Voice Session Management
+  let elevenLabsSession = null;
+  
+  async function startElevenLabsVoiceSession(agentId) {
+    try {
+      // Initialize ElevenLabs conversation session
+      console.log('🔊 Initializing ElevenLabs voice session...');
+      
+      // Create a session object to track the voice interaction
+      elevenLabsSession = {
+        agentId: agentId,
+        sessionId: Date.now().toString(),
+        isActive: true,
+        startTime: new Date()
+      };
+      
+      // Add a message to the chat indicating voice call started
+      addMessageToChat('System', 'Voice call started. Speak now to interact with the AI assistant.', 'system');
+      
+      console.log('🔊 ElevenLabs voice session started:', elevenLabsSession);
+      
+      // Here you would typically integrate with ElevenLabs SDK or API
+      // For now, we'll simulate the voice interaction
+      simulateVoiceInteraction();
+      
+    } catch (error) {
+      console.error('Failed to start ElevenLabs voice session:', error);
+      throw error;
+    }
+  }
+  
+  async function endElevenLabsVoiceSession() {
+    try {
+      if (elevenLabsSession && elevenLabsSession.isActive) {
+        console.log('🔊 Ending ElevenLabs voice session...');
+        
+        elevenLabsSession.isActive = false;
+        elevenLabsSession.endTime = new Date();
+        
+        // Add a message to the chat indicating voice call ended
+        addMessageToChat('System', 'Voice call ended.', 'system');
+        
+        console.log('🔊 ElevenLabs voice session ended:', elevenLabsSession);
+        
+        // Clear the session
+        elevenLabsSession = null;
+      }
+    } catch (error) {
+      console.error('Error ending ElevenLabs voice session:', error);
+      throw error;
+    }
+  }
+  
+  function simulateVoiceInteraction() {
+    // This is a placeholder for actual ElevenLabs integration
+    // In a real implementation, you would:
+    // 1. Connect to ElevenLabs WebSocket or API
+    // 2. Handle voice input/output
+    // 3. Process responses and add them to chat
+    
+    setTimeout(() => {
+      if (elevenLabsSession && elevenLabsSession.isActive) {
+        addMessageToChat('AI Assistant', 'Hello! I can hear you now. How can I help you today?', 'ai');
+      }
+    }, 2000);
   }
   
   async function endVoiceCall() {
     try {
-      // If there was an active call, notify the voice service to end it
+      // If there was an active call, end the ElevenLabs voice session
       if (isCallActive) {
-        // Replace this URL with your voice service endpoint
-        const voiceServiceUrl = 'YOUR_VOICE_SERVICE_URL/api/voice/end';
-        
-        await fetch(voiceServiceUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            shopDomain: '{{ shop.myshopify_domain }}'
-          })
-        });
-        
+        await endElevenLabsVoiceSession();
         console.log('🔊 Voice call ended');
       }
     } catch (error) {

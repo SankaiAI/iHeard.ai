@@ -24,6 +24,7 @@ const DEFAULT_SETTINGS = {
   customWebhookUrl: "",
   chatBackgroundColor: "white",
   useDefaultAppearance: false,
+  avatarUrl: null,
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {

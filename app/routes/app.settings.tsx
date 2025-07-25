@@ -17,6 +17,8 @@ import {
   Text,
   Divider,
   Checkbox,
+  DropZone,
+  Thumbnail,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import db from "../db.server";
@@ -41,6 +43,7 @@ const DEFAULT_SETTINGS = {
   customWebhookUrl: "",
   chatBackgroundColor: "white",
   useDefaultAppearance: false,
+  avatarUrl: null,
 };
 
 type SettingsType = typeof DEFAULT_SETTINGS & { shop?: string; id?: string; createdAt?: Date; updatedAt?: Date };
@@ -173,6 +176,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     useDefaultAppearance: formData.get("useDefaultAppearance") === "true",
     // Handle customWebhookUrl properly - only include if it has a value
     ...(formData.get("customWebhookUrl") && { customWebhookUrl: formData.get("customWebhookUrl") as string }),
+    // Handle avatarUrl - only include if it has a value, allow null to remove avatar
+    ...(formData.has("avatarUrl") && { avatarUrl: formData.get("avatarUrl") as string | null }),
   };
   
   // Save settings to database
@@ -202,6 +207,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState(initialSettings);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File[]>([]);
   
   // Get workflow type from explicit workflowType field
   const getWorkflowType = () => {
@@ -214,6 +220,38 @@ export default function SettingsPage() {
       setShowSuccessBanner(true);
     }
   }, [actionData]);
+
+  // Avatar handling functions
+  const handleAvatarDrop = useCallback((files: File[]) => {
+    const file = files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please upload an image file.');
+        return;
+      }
+      
+      // Validate file size (max 2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Please upload an image smaller than 2MB.');
+        return;
+      }
+      
+      // Convert to base64 for storage
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        setSettings((prev: SettingsType) => ({ ...prev, avatarUrl: base64 }));
+      };
+      reader.readAsDataURL(file);
+      setAvatarFile([file]);
+    }
+  }, []);
+
+  const handleAvatarRemove = useCallback(() => {
+    setSettings((prev: SettingsType) => ({ ...prev, avatarUrl: null }));
+    setAvatarFile([]);
+  }, []);
 
   const handleSave = useCallback(() => {
     setIsSaving(true);
@@ -307,6 +345,35 @@ export default function SettingsPage() {
                   }
                   helpText="Toggle the AI assistant widget on/off across your store"
                 />
+
+                <BlockStack gap="200">
+                  <Text variant="bodyMd" as="p">
+                    Chat Assistant Avatar
+                  </Text>
+                  {(settings as any).avatarUrl ? (
+                    <BlockStack gap="200">
+                      <Thumbnail
+                        source={(settings as any).avatarUrl}
+                        alt="Chat Assistant Avatar"
+                        size="large"
+                      />
+                      <Button
+                        onClick={handleAvatarRemove}
+                        tone="critical"
+                        variant="plain"
+                      >
+                        Remove Avatar
+                      </Button>
+                    </BlockStack>
+                  ) : (
+                    <DropZone onDrop={handleAvatarDrop} accept="image/*">
+                      <DropZone.FileUpload />
+                    </DropZone>
+                  )}
+                  <Text variant="bodySm" as="p" tone="subdued">
+                    Upload an avatar image for your chat assistant. It will appear in the chat header next to the title. Maximum file size: 2MB. Supported formats: JPG, PNG, GIF.
+                  </Text>
+                </BlockStack>
 
                 <Select
                   label="Widget Position"
